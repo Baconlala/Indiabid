@@ -1,0 +1,36 @@
+insert into cities (name, slug) values
+  ('Mumbai', 'mumbai'),
+  ('Delhi', 'delhi'),
+  ('Bengaluru', 'bengaluru'),
+  ('Chennai', 'chennai'),
+  ('Kolkata', 'kolkata'),
+  ('Hyderabad', 'hyderabad'),
+  ('Ahmedabad', 'ahmedabad'),
+  ('Pune', 'pune'),
+  ('Jaipur', 'jaipur'),
+  ('Lucknow', 'lucknow');
+
+insert into categories (name, slug, "group", icon, is_sensitive) values
+  ('AI Tools', 'ai-tools', 'AI', '🤖', false),
+  ('AI Agents', 'ai-agents', 'AI', '🧠', false),
+  ('AI Design', 'ai-design', 'AI', '🎨', false),
+  ('SaaS', 'saas', 'Software', '💻', false),
+  ('Dev Tools', 'dev-tools', 'Software', '🛠️', false),
+  ('Mobile Apps', 'mobile-apps', 'Software', '📱', false),
+  ('Marketing', 'marketing', 'Growth', '📈', false),
+  ('SEO Tools', 'seo-tools', 'Growth', '🔍', false),
+  ('Communities', 'communities', 'Growth', '🌐', false),
+  ('Fintech', 'fintech', 'Money', '💳', false),
+  ('Investing', 'investing', 'Money', '📊', false),
+  ('Crypto', 'crypto', 'Money', '🪙', false),
+  ('Ecommerce', 'ecommerce', 'Sectors', '🛒', false),
+  ('Real Estate', 'real-estate', 'Sectors', '🏠', false),
+  ('Healthcare', 'healthcare', 'Sectors', '🏥', false),
+  ('Education', 'education', 'Sectors', '🎓', false),
+  ('Creators', 'creators', 'People', '✍️', false),
+  ('Freelancers', 'freelancers', 'People', '🧑‍💼', false),
+  ('Coaches', 'coaches', 'People', '🎤', false),
+  -- Sensitive groups held for moderation at submission time (see anti-abuse rules).
+  ('Adult', 'adult', 'Sectors', '🔞', true),
+  ('Gambling', 'gambling', 'Money', '🎰', true),
+  ('MLM', 'mlm', 'Money', '🔺', true);

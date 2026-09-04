@@ -1,0 +1,253 @@
+-- Combined migration script — paste this whole file into the Supabase SQL Editor and run once.
+-- Generated from migrations/0001-0004; keep those as the source of truth for future changes.
+
+-- ===== 0001_init_schema.sql =====
+-- IndiaBid core schema: cities, categories, listings, payments, clicks, activity feed.
+create extension if not exists "pgcrypto";
+
+create table cities (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  slug text not null unique,
+  created_at timestamptz not null default now()
+);
+
+create table categories (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  slug text not null unique,
+  "group" text not null check (
+    "group" in ('AI', 'Software', 'Growth', 'Money', 'Sectors', 'People')
+  ),
+  icon text not null default '',
+  is_sensitive boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+create table listings (
+  id uuid primary key default gen_random_uuid(),
+  url text not null,
+  -- URL with UTM/tracking params stripped, used for submission dedupe.
+  normalized_url text not null,
+  title text not null,
+  description text not null,
+  category_id uuid not null references categories (id),
+  city_id uuid references cities (id), -- null = national board
+  current_bid integer not null default 0 check (current_bid >= 0),
+  is_claimed boolean not null default false,
+  is_locked boolean not null default false,
+  locked_until timestamptz,
+  owner_contact text,
+  -- Unguessable token used to build the owner dashboard magic link; no login system.
+  owner_magic_token uuid not null default gen_random_uuid() unique,
+  image_url text,
+  favicon_url text,
+  click_count integer not null default 0,
+  moderation_status text not null default 'approved' check (
+    moderation_status in ('pending', 'approved', 'rejected')
+  ),
+  submitter_ip inet,
+  submitter_phone text,
+  is_active boolean not null default true,
+  created_at timestamptz not null default now(),
+  last_bid_at timestamptz
+);
+
+create unique index listings_normalized_url_active_idx
+  on listings (normalized_url)
+  where is_active;
+
+create index listings_board_rank_idx
+  on listings (city_id, category_id, current_bid desc, created_at asc)
+  where is_active and moderation_status = 'approved';
+
+create index listings_moderation_queue_idx
+  on listings (moderation_status)
+  where moderation_status = 'pending';
+
+create table payments (
+  id uuid primary key default gen_random_uuid(),
+  listing_id uuid not null references listings (id),
+  amount integer not null check (amount > 0),
+  bid_type text not null check (bid_type in ('claim', 'improve', 'reclaim', 'lock')),
+  previous_bid integer not null default 0,
+  razorpay_order_id text,
+  razorpay_payment_id text unique,
+  status text not null default 'created' check (
+    status in ('created', 'captured', 'failed', 'refunded')
+  ),
+  created_at timestamptz not null default now()
+);
+
+create index payments_listing_idx on payments (listing_id, created_at desc);
+
+create table clicks (
+  id uuid primary key default gen_random_uuid(),
+  listing_id uuid not null references listings (id),
+  "timestamp" timestamptz not null default now(),
+  referrer text
+);
+
+create index clicks_listing_time_idx on clicks (listing_id, "timestamp" desc);
+
+create table activity_feed (
+  id uuid primary key default gen_random_uuid(),
+  listing_id uuid not null references listings (id),
+  event_type text not null check (
+    event_type in ('listing_created', 'bid_placed', 'rank_reclaimed', 'top_locked')
+  ),
+  amount integer,
+  "timestamp" timestamptz not null default now()
+);
+
+create index activity_feed_time_idx on activity_feed ("timestamp" desc);
+
+-- ===== 0002_rls_policies.sql =====
+-- Lock down direct table access; the Next.js server uses the service role key
+-- for all writes and for reads that need owner_contact. Anonymous (browser)
+-- access goes through the public views below, which hide owner_contact and
+-- listings still sitting in the moderation queue.
+alter table cities enable row level security;
+alter table categories enable row level security;
+alter table listings enable row level security;
+alter table payments enable row level security;
+alter table clicks enable row level security;
+alter table activity_feed enable row level security;
+
+create policy "cities are publicly readable"
+  on cities for select
+  to anon, authenticated
+  using (true);
+
+create policy "categories are publicly readable"
+  on categories for select
+  to anon, authenticated
+  using (true);
+
+-- No anon/authenticated policies on listings, payments, or clicks: reached
+-- only through the service role or the sanitized views below.
+
+create view listings_public as
+  select
+    id, url, title, description, category_id, city_id, current_bid,
+    is_claimed, is_locked, locked_until, image_url, favicon_url,
+    click_count, created_at, last_bid_at
+  from listings
+  where is_active and moderation_status = 'approved';
+
+grant select on listings_public to anon, authenticated;
+
+create view activity_feed_public as
+  select af.id, af.listing_id, af.event_type, af.amount, af."timestamp"
+  from activity_feed af
+  join listings l on l.id = af.listing_id
+  where l.is_active and l.moderation_status = 'approved';
+
+grant select on activity_feed_public to anon, authenticated;
+
+-- ===== 0003_seed_categories_cities.sql =====
+insert into cities (name, slug) values
+  ('Mumbai', 'mumbai'),
+  ('Delhi', 'delhi'),
+  ('Bengaluru', 'bengaluru'),
+  ('Chennai', 'chennai'),
+  ('Kolkata', 'kolkata'),
+  ('Hyderabad', 'hyderabad'),
+  ('Ahmedabad', 'ahmedabad'),
+  ('Pune', 'pune'),
+  ('Jaipur', 'jaipur'),
+  ('Lucknow', 'lucknow');
+
+insert into categories (name, slug, "group", icon, is_sensitive) values
+  ('AI Tools', 'ai-tools', 'AI', '🤖', false),
+  ('AI Agents', 'ai-agents', 'AI', '🧠', false),
+  ('AI Design', 'ai-design', 'AI', '🎨', false),
+  ('SaaS', 'saas', 'Software', '💻', false),
+  ('Dev Tools', 'dev-tools', 'Software', '🛠️', false),
+  ('Mobile Apps', 'mobile-apps', 'Software', '📱', false),
+  ('Marketing', 'marketing', 'Growth', '📈', false),
+  ('SEO Tools', 'seo-tools', 'Growth', '🔍', false),
+  ('Communities', 'communities', 'Growth', '🌐', false),
+  ('Fintech', 'fintech', 'Money', '💳', false),
+  ('Investing', 'investing', 'Money', '📊', false),
+  ('Crypto', 'crypto', 'Money', '🪙', false),
+  ('Ecommerce', 'ecommerce', 'Sectors', '🛒', false),
+  ('Real Estate', 'real-estate', 'Sectors', '🏠', false),
+  ('Healthcare', 'healthcare', 'Sectors', '🏥', false),
+  ('Education', 'education', 'Sectors', '🎓', false),
+  ('Creators', 'creators', 'People', '✍️', false),
+  ('Freelancers', 'freelancers', 'People', '🧑‍💼', false),
+  ('Coaches', 'coaches', 'People', '🎤', false),
+  -- Sensitive groups held for moderation at submission time (see anti-abuse rules).
+  ('Adult', 'adult', 'Sectors', '🔞', true),
+  ('Gambling', 'gambling', 'Money', '🎰', true),
+  ('MLM', 'mlm', 'Money', '🔺', true);
+
+-- ===== 0004_seed_launch_listings.sql =====
+-- Cold start: real, recognisable listings seeded unclaimed. Each shows a
+-- "claim it free" prompt until the actual owner verifies and claims it.
+-- City assignment follows each company's actual HQ.
+with seed(url, title, description, category_slug, city_slug) as (
+  values
+    -- AI
+    ('https://krutrim.ai', 'Krutrim', 'Multilingual AI foundation models and assistant built for Indian languages.', 'ai-tools', null),
+    ('https://haptik.ai', 'Haptik', 'Conversational AI platform for customer support chatbots and voice agents.', 'ai-agents', null),
+    ('https://rocketium.com', 'Rocketium', 'AI-powered platform for generating ad creatives and marketing videos at scale.', 'ai-design', null),
+    -- Software
+    ('https://zoho.com', 'Zoho', 'Cloud software suite for CRM, finance, HR, and productivity.', 'saas', null),
+    ('https://freshworks.com', 'Freshworks', 'Customer engagement software including helpdesk, CRM, and IT service management.', 'saas', null),
+    ('https://chargebee.com', 'Chargebee', 'Subscription billing and revenue management platform for SaaS companies.', 'saas', null),
+    ('https://postman.com', 'Postman', 'API platform used by developers to build, test, and share APIs.', 'dev-tools', null),
+    ('https://hasura.io', 'Hasura', 'Open-source engine that turns databases into ready-to-use GraphQL and REST APIs.', 'dev-tools', null),
+    ('https://cred.club', 'CRED', 'Members-only app for paying credit card bills and unlocking rewards for good credit behaviour.', 'mobile-apps', null),
+    ('https://meesho.com', 'Meesho', 'Social commerce platform enabling small businesses and resellers to sell online.', 'mobile-apps', null),
+    ('https://sharechat.com', 'ShareChat', 'Regional-language social media platform for short videos and content in India.', 'mobile-apps', null),
+    -- Growth
+    ('https://webengage.com', 'WebEngage', 'Customer engagement and retention platform for mobile and web apps.', 'marketing', null),
+    ('https://rankwatch.com', 'RankWatch', 'SEO tool for tracking keyword rankings, audits, and backlink monitoring.', 'seo-tools', null),
+    ('https://peerlist.io', 'Peerlist', 'Professional network and community for tech builders to showcase work.', 'communities', null),
+    ('https://hasgeek.com', 'Hasgeek', 'Long-running community platform for India''s technology conferences and meetups.', 'communities', null),
+    -- Money
+    ('https://paytm.com', 'Paytm', 'Digital payments and financial services app used across India.', 'fintech', null),
+    ('https://jupiter.money', 'Jupiter', 'Digital banking app offering savings accounts, budgeting, and rewards.', 'fintech', null),
+    ('https://zerodha.com', 'Zerodha', 'Discount stockbroking platform for trading and investing in Indian markets.', 'investing', null),
+    ('https://upstox.com', 'Upstox', 'Stockbroking and investing app for equities, F&O, and mutual funds.', 'investing', null),
+    ('https://indmoney.com', 'INDmoney', 'Wealth management app for tracking and investing across Indian and US markets.', 'investing', null),
+    ('https://coindcx.com', 'CoinDCX', 'Cryptocurrency exchange for buying, selling, and trading digital assets in India.', 'crypto', null),
+    ('https://coinswitch.co', 'CoinSwitch', 'Platform for investing in cryptocurrency with a simple, beginner-friendly interface.', 'crypto', null),
+    -- Sectors
+    ('https://flipkart.com', 'Flipkart', 'Online marketplace for electronics, fashion, and everyday essentials.', 'ecommerce', null),
+    ('https://nykaa.com', 'Nykaa', 'Beauty and personal care marketplace with owned and third-party brands.', 'ecommerce', null),
+    ('https://bigbasket.com', 'BigBasket', 'Online grocery delivery service for daily essentials and household items.', 'ecommerce', null),
+    ('https://nobroker.in', 'NoBroker', 'Brokerage-free platform for buying, selling, and renting property.', 'real-estate', null),
+    ('https://housing.com', 'Housing.com', 'Property search platform for buying and renting homes across Indian cities.', 'real-estate', null),
+    ('https://practo.com', 'Practo', 'Platform for booking doctor appointments and consulting online.', 'healthcare', null),
+    ('https://1mg.com', 'Tata 1mg', 'Online pharmacy and diagnostics platform for medicines and lab tests.', 'healthcare', null),
+    ('https://cult.fit', 'Cult.fit', 'Fitness and wellness platform offering gym classes, live workouts, and healthcare.', 'healthcare', null),
+    ('https://byjus.com', 'BYJU''S', 'Online learning platform offering courses for school and competitive exams.', 'education', null),
+    ('https://unacademy.com', 'Unacademy', 'Online learning platform with live classes for competitive exam preparation.', 'education', null),
+    ('https://pw.live', 'PhysicsWallah', 'Affordable online coaching platform for JEE, NEET, and school students.', 'education', null),
+    -- People
+    ('https://peppercontent.io', 'Pepper Content', 'Marketplace connecting brands with freelance writers and content creators.', 'creators', null),
+    ('https://truelancer.com', 'Truelancer', 'Freelance marketplace connecting Indian freelancers with clients and projects.', 'freelancers', null),
+    ('https://fittr.com', 'Fittr', 'Online fitness coaching community with certified trainers and nutrition plans.', 'coaches', null),
+    -- Mumbai — sample city board, companies actually headquartered there
+    ('https://browserstack.com', 'BrowserStack', 'Cloud platform for testing websites and apps across real browsers and devices.', 'dev-tools', 'mumbai'),
+    ('https://clevertap.com', 'CleverTap', 'Customer engagement and analytics platform for mobile and web apps.', 'marketing', 'mumbai'),
+    ('https://zeptonow.com', 'Zepto', 'Quick-commerce app delivering groceries and essentials in minutes.', 'ecommerce', 'mumbai'),
+    ('https://dream11.com', 'Dream11', 'Fantasy sports app for cricket, football, and other real-match contests.', 'mobile-apps', 'mumbai'),
+    ('https://pharmeasy.in', 'PharmEasy', 'Online pharmacy for ordering medicines and booking diagnostic tests.', 'healthcare', 'mumbai'),
+    ('https://angelone.in', 'Angel One', 'Full-service stockbroking platform for trading and investing.', 'investing', 'mumbai')
+),
+inserted as (
+  insert into listings (url, normalized_url, title, description, category_id, city_id, is_claimed, is_active, moderation_status)
+  select s.url, s.url, s.title, s.description, c.id, ci.id, false, true, 'approved'
+  from seed s
+  join categories c on c.slug = s.category_slug
+  left join cities ci on ci.slug = s.city_slug
+  returning id, created_at
+)
+insert into activity_feed (listing_id, event_type, amount, "timestamp")
+select id, 'listing_created', null, created_at
+from inserted;
+

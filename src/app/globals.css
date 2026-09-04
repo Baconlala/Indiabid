@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fbfaf8;
+  --surface: #f2f1ec;
+  --surface-raised: #ffffff;
+  --border: #e3e1d8;
+  --foreground: #16161a;
+  --muted: #57575f;
+  --saffron: #d9760a;
+  --india-green: #0e6e06;
+  --gold: #a6720a;
+  --danger: #c92a2a;
+}
+
+.dark {
+  --background: #08080b;
+  --surface: #101014;
+  --surface-raised: #17171d;
+  --border: #232329;
+  --foreground: #f4f4f2;
+  --muted: #a3a3ae;
+  --saffron: #ff9933;
+  --india-green: #22b511;
+  --gold: #f4c542;
+  --danger: #ff6b6b;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-border: var(--border);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-saffron: var(--saffron);
+  --color-india-green: var(--india-green);
+  --color-gold: var(--gold);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+::selection {
+  background: var(--saffron);
+  color: #1a1000;
+}
+
+@keyframes marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee-scroll 40s linear infinite;
+}
