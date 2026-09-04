@@ -35,14 +35,12 @@ export default function Header() {
             Local
           </Link>
           <ThemeToggle />
-          <button
-            type="button"
-            disabled
-            title="Submission form is coming in the next step"
-            className="rounded-full bg-foreground px-4 py-1.5 text-sm font-semibold text-background disabled:cursor-not-allowed disabled:opacity-40"
+          <Link
+            href="/submit"
+            className="rounded-full bg-foreground px-4 py-1.5 text-sm font-semibold text-background transition-opacity hover:opacity-90"
           >
             Add a listing
-          </button>
+          </Link>
         </nav>
       </div>
     </header>
