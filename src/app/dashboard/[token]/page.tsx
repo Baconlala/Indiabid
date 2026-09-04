@@ -3,13 +3,9 @@ import ClickChart from "@/components/ClickChart";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import { formatCount, formatRupees, timeAgo } from "@/lib/format";
-import { getCategories, getListingById, getListings, sortBoard } from "@/lib/data";
+import { getCategories, getListingByMagicToken, getListings, sortBoard } from "@/lib/data";
 import { clicksByDay, generateClickLog } from "@/lib/mock-clicks";
 
-// The magic-link token equals the listing id here for demo purposes only.
-// In production this is listings.owner_magic_token — an unguessable id
-// unrelated to the listing id — sent to the owner after they claim.
-//
 // Rank/bid/clicks all change live — never cache this page.
 export const dynamic = "force-dynamic";
 
@@ -19,7 +15,7 @@ export default async function DashboardPage({
   params: Promise<{ token: string }>;
 }) {
   const { token } = await params;
-  const listing = await getListingById(token);
+  const listing = await getListingByMagicToken(token);
   if (!listing) notFound();
 
   const [categories, listings] = await Promise.all([getCategories(), getListings()]);

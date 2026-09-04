@@ -2,9 +2,16 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import ClaimFlow from "@/components/ClaimFlow";
 import Footer from "@/components/Footer";
+import FreeClaimForm from "@/components/FreeClaimForm";
 import Header from "@/components/Header";
 import { computeClaimRequirement } from "@/lib/claim-logic";
-import { getCategories, getListingById, getListings, sortBoard } from "@/lib/data";
+import {
+  getCategories,
+  getListingById,
+  getListingOwnershipStatus,
+  getListings,
+  sortBoard,
+} from "@/lib/data";
 
 // The required bid amount depends on live board state — never cache this page.
 export const dynamic = "force-dynamic";
@@ -18,7 +25,11 @@ export default async function ClaimPage({
   const listing = await getListingById(id);
   if (!listing) notFound();
 
-  const [categories, listings] = await Promise.all([getCategories(), getListings()]);
+  const [categories, listings, ownership] = await Promise.all([
+    getCategories(),
+    getListings(),
+    getListingOwnershipStatus(id),
+  ]);
   const category = categories.find((c) => c.id === listing.categoryId);
   const board = sortBoard(listings, listing.cityId);
   const { mode, minRequired, currentLeaderBid } = computeClaimRequirement(listing, board);
@@ -46,6 +57,17 @@ export default async function ClaimPage({
           </div>
         </div>
 
+        {ownership && !ownership.hasOwner && (
+          <FreeClaimForm listingId={listing.id} listingTitle={listing.title} />
+        )}
+
+        <div className="flex flex-col gap-1">
+          <h2 className="text-sm font-bold text-foreground">Bid for rank (paid)</h2>
+          <p className="text-xs text-muted">
+            Optional and separate from claiming ownership above — this is what actually moves your
+            rank on the board.
+          </p>
+        </div>
         <ClaimFlow
           listing={listing}
           mode={mode}

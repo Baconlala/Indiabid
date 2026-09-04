@@ -1,4 +1,4 @@
-import { createBrowserSupabaseClient } from "./supabase";
+import { createBrowserSupabaseClient, createServiceSupabaseClient } from "./supabase";
 import type { ActivityEvent, Category, City, Listing } from "./types";
 import { charityAmount } from "./bidding";
 
@@ -90,6 +90,58 @@ export async function getListingById(id: string): Promise<Listing | null> {
     throw error;
   }
   return data ? mapListing(data) : null;
+}
+
+/** Server-only: whether a listing already has an owner on file (never exposes the contact itself). */
+export async function getListingOwnershipStatus(id: string): Promise<{ hasOwner: boolean } | null> {
+  const supabase = createServiceSupabaseClient();
+  const { data, error } = await supabase
+    .from("listings")
+    .select("owner_contact")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) {
+    if (error.code === "22P02") return null;
+    throw error;
+  }
+  return data ? { hasOwner: data.owner_contact != null } : null;
+}
+
+/** Server-only: looks a listing up by its magic-link dashboard token. */
+export async function getListingByMagicToken(token: string): Promise<Listing | null> {
+  const supabase = createServiceSupabaseClient();
+  const { data, error } = await supabase
+    .from("listings")
+    .select(
+      "id, url, title, description, category_id, city_id, current_bid, is_claimed, is_locked, locked_until, image_url, favicon_url, click_count, created_at, last_bid_at, is_active"
+    )
+    .eq("owner_magic_token", token)
+    .eq("is_active", true)
+    .maybeSingle();
+  if (error) {
+    if (error.code === "22P02") return null;
+    throw error;
+  }
+  if (!data) return null;
+  return {
+    id: data.id,
+    url: data.url,
+    title: data.title,
+    description: data.description,
+    categoryId: data.category_id,
+    cityId: data.city_id,
+    currentBid: data.current_bid,
+    isClaimed: data.is_claimed,
+    isLocked: data.is_locked,
+    lockedUntil: data.locked_until,
+    ownerContact: null,
+    imageUrl: data.image_url,
+    faviconUrl: data.favicon_url,
+    clickCount: data.click_count,
+    createdAt: data.created_at,
+    lastBidAt: data.last_bid_at,
+    isActive: data.is_active,
+  };
 }
 
 export async function getActivityFeed(limit = 50): Promise<ActivityEvent[]> {

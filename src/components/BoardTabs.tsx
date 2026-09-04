@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import type { City } from "@/lib/types";
+import HScroller from "./HScroller";
 import IndiaFlag from "./IndiaFlag";
 
 type Props = {
@@ -12,9 +13,9 @@ type Props = {
 
 export default function BoardTabs({ cities, selected, onSelect }: Props) {
   return (
-    <div
+    <HScroller
       id="board-tabs"
-      className="flex min-w-0 scroll-mt-20 gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      scrollClassName="flex min-w-0 scroll-mt-20 gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       <Tab active={selected === null} onClick={() => onSelect(null)}>
         <IndiaFlag className="h-3.5 w-5" /> National
@@ -24,7 +25,7 @@ export default function BoardTabs({ cities, selected, onSelect }: Props) {
           {city.name}
         </Tab>
       ))}
-    </div>
+    </HScroller>
   );
 }
 

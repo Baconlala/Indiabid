@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import type { Category, CategoryGroup } from "@/lib/types";
+import HScroller from "./HScroller";
 import IndiaFlag from "./IndiaFlag";
 
 type Props = {
@@ -13,7 +14,7 @@ type Props = {
 
 export default function CategoryPills({ categories, groups, selected, onSelect }: Props) {
   return (
-    <div className="flex min-w-0 gap-4 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <HScroller scrollClassName="flex min-w-0 gap-4 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <PillGroup label="All">
         <Pill
           active={selected === "all"}
@@ -39,7 +40,7 @@ export default function CategoryPills({ categories, groups, selected, onSelect }
           </PillGroup>
         );
       })}
-    </div>
+    </HScroller>
   );
 }
 
