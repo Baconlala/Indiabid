@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import type { Category, CategoryGroup, City, Listing } from "@/lib/types";
+import AgeGateBanner from "./AgeGateBanner";
 import CharityBanner from "./CharityBanner";
 import Footer from "./Footer";
 import Header from "./Header";
@@ -33,6 +34,7 @@ export default function PageShell({
       <main className="mx-auto flex w-full min-w-0 max-w-5xl flex-1 flex-col gap-12 px-4 pb-16 sm:px-6">
         <Hero />
         <CharityBanner charityDonated={charityDonated} />
+        <AgeGateBanner />
         <HomeExplorer
           listings={listings}
           categories={categories}

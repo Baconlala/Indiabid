@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import type { Category, CategoryGroup, City, Listing } from "@/lib/types";
 import { minimumBidToTakeLead } from "@/lib/bidding";
 import { formatRupees } from "@/lib/format";
+import { useAgeGate } from "@/lib/age-gate-context";
 import BoardTabs from "./BoardTabs";
 import BidWidget from "./BidWidget";
 import CategoryPills from "./CategoryPills";
@@ -27,22 +28,26 @@ export default function HomeExplorer({
   onCityChange,
 }: Props) {
   const [categoryId, setCategoryId] = useState<string | "all">("all");
+  const { adultUnlocked } = useAgeGate();
+  const categoryById = (id: string) => categories.find((c) => c.id === id);
 
   const boardListings = useMemo(() => {
     return listings
       .filter((l) => l.isActive && l.cityId === cityId)
       .filter((l) => categoryId === "all" || l.categoryId === categoryId)
+      .filter((l) => {
+        const cat = categories.find((c) => c.id === l.categoryId);
+        return !cat?.isSensitive || (cat.slug === "adult" && adultUnlocked);
+      })
       .sort((a, b) => {
         if (b.currentBid !== a.currentBid) return b.currentBid - a.currentBid;
         return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
       });
-  }, [listings, cityId, categoryId]);
+  }, [listings, cityId, categoryId, categories, adultUnlocked]);
 
   const topBid = boardListings[0]?.currentBid ?? 0;
   const minBid = minimumBidToTakeLead(topBid);
   const boardLabel = cityId ? cities.find((c) => c.id === cityId)?.name ?? "Local" : "National";
-
-  const categoryById = (id: string) => categories.find((c) => c.id === id);
 
   return (
     <div className="flex min-w-0 flex-col gap-8">

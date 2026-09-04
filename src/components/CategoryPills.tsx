@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import type { Category, CategoryGroup } from "@/lib/types";
+import { useAgeGate } from "@/lib/age-gate-context";
 import HScroller from "./HScroller";
 import IndiaFlag from "./IndiaFlag";
 
@@ -13,6 +14,9 @@ type Props = {
 };
 
 export default function CategoryPills({ categories, groups, selected, onSelect }: Props) {
+  const { adultUnlocked } = useAgeGate();
+  const visible = (c: Category) => !c.isSensitive || (c.slug === "adult" && adultUnlocked);
+
   return (
     <HScroller scrollClassName="flex min-w-0 gap-4 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <PillGroup label="All">
@@ -24,7 +28,7 @@ export default function CategoryPills({ categories, groups, selected, onSelect }
         />
       </PillGroup>
       {groups.map((group) => {
-        const groupCategories = categories.filter((c) => c.group === group && !c.isSensitive);
+        const groupCategories = categories.filter((c) => c.group === group && visible(c));
         if (groupCategories.length === 0) return null;
         return (
           <PillGroup key={group} label={group}>

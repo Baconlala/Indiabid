@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import type { Category, City, Listing } from "@/lib/types";
 import { minimumBidToTakeLead } from "@/lib/bidding";
+import { useAgeGate } from "@/lib/age-gate-context";
+import AgeGateBanner from "./AgeGateBanner";
 import BidWidget from "./BidWidget";
 import BoardTabs from "./BoardTabs";
 import Leaderboard from "./Leaderboard";
@@ -15,6 +17,8 @@ type Props = {
 
 export default function CategoryExplorer({ listings, category, cities }: Props) {
   const [cityId, setCityId] = useState<string | null>(null);
+  const { adultUnlocked } = useAgeGate();
+  const gated = category.isSensitive && !adultUnlocked;
 
   // Rank is decided board-wide (national or a city), across every category —
   // a category page just filters which listings are shown, so the amount
@@ -47,7 +51,11 @@ export default function CategoryExplorer({ listings, category, cities }: Props) 
         hasLeader={boardTopBid > 0}
       />
 
-      <Leaderboard listings={categoryListings} categoryById={() => category} />
+      {gated ? (
+        <AgeGateBanner />
+      ) : (
+        <Leaderboard listings={categoryListings} categoryById={() => category} />
+      )}
     </div>
   );
 }

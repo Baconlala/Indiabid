@@ -1,3 +1,4 @@
+import AgeGateBanner from "@/components/AgeGateBanner";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import LocalExplorer from "@/components/LocalExplorer";
@@ -26,6 +27,7 @@ export default async function LocalPage() {
             Every city ranks separately. Pick a city to see who&apos;s on top.
           </p>
         </div>
+        <AgeGateBanner />
         <LocalExplorer
           listings={listings}
           categories={categories}

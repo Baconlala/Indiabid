@@ -15,7 +15,9 @@ export default async function CategoryPage({
   const { slug } = await params;
   const [categories, cities, listings] = await Promise.all([getCategories(), getCities(), getListings()]);
   const category = categories.find((c) => c.slug === slug);
-  if (!category || category.isSensitive) notFound();
+  // Adult is reachable (gated client-side by CategoryExplorer via the age-gate).
+  // Other sensitive categories (gambling, MLM) have no public unlock path at all.
+  if (!category || (category.isSensitive && category.slug !== "adult")) notFound();
 
   return (
     <>
