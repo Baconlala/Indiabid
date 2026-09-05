@@ -25,7 +25,9 @@ export async function sendOwnershipEmail(
     : `Here's your dashboard link for <strong>${listingTitle}</strong>.`;
   const cta = isNewClaim ? "Confirm ownership" : "Open dashboard";
 
-  await resend.emails.send({
+  // The Resend SDK does not throw on a rejected send (e.g. unverified sending
+  // domain) — failures come back as `error` on an otherwise-resolved promise.
+  const { error } = await resend.emails.send({
     from,
     to,
     subject,
@@ -43,4 +45,8 @@ export async function sendOwnershipEmail(
       </div>
     `,
   });
+
+  if (error) {
+    throw new Error(`Resend rejected the email: ${error.message}`);
+  }
 }
