@@ -96,3 +96,42 @@ const PHONE_RE = /^[6-9]\d{9}$/;
 export function isValidIndianPhone(phone: string): boolean {
   return PHONE_RE.test(phone.replace(/\D/g, "").slice(-10));
 }
+
+// Two-label ccTLDs where the registrable domain needs three labels, not two
+// (e.g. "acme.co.in", not just "co.in"). Not exhaustive — a real public-suffix
+// list would be more correct, but this covers the common cases for an
+// India-focused audience without adding a dependency for it.
+const TWO_LABEL_TLDS = new Set([
+  "co.in",
+  "com.in",
+  "net.in",
+  "org.in",
+  "co.uk",
+  "co.nz",
+  "co.jp",
+  "com.au",
+  "com.br",
+  "co.za",
+]);
+
+/** Best-effort registrable domain, e.g. "app.khatabook.com" -> "khatabook.com". */
+export function registrableDomain(hostname: string): string {
+  const labels = hostname.toLowerCase().split(".");
+  if (labels.length <= 2) return hostname.toLowerCase();
+  const lastTwo = labels.slice(-2).join(".");
+  const take = TWO_LABEL_TLDS.has(lastTwo) ? 3 : 2;
+  return labels.slice(-take).join(".");
+}
+
+/** Whether an email's domain plausibly belongs to the same organisation as the listing's URL. */
+export function emailMatchesListingDomain(email: string, listingUrl: string): boolean {
+  const emailDomain = email.split("@")[1]?.toLowerCase().trim();
+  if (!emailDomain) return false;
+  let listingHost: string;
+  try {
+    listingHost = new URL(listingUrl).hostname;
+  } catch {
+    return false;
+  }
+  return registrableDomain(emailDomain) === registrableDomain(listingHost);
+}

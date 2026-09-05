@@ -1,12 +1,33 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import WhatsAppShareButton from "@/components/WhatsAppShareButton";
 import { formatRupees, formatCount, timeAgo } from "@/lib/format";
 import { getCategories, getCities, getListingById } from "@/lib/data";
 
 // Bid/claim state can change at any moment — never serve a stale cached listing.
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const listing = await getListingById(id);
+  if (!listing) return {};
+
+  const title = `${listing.title} on IndiaBid`;
+  const imageUrl = `/api/og?listingId=${id}&variant=ranked`;
+  return {
+    title,
+    description: listing.description,
+    openGraph: { title, description: listing.description, images: [imageUrl] },
+    twitter: { card: "summary_large_image", title, description: listing.description, images: [imageUrl] },
+  };
+}
 
 export default async function ListingDetailPage({
   params,
@@ -89,6 +110,12 @@ export default async function ListingDetailPage({
           >
             {listing.isClaimed ? "Claim this rank" : "Run this? Claim it free"}
           </Link>
+          <WhatsAppShareButton
+            path={`/listing/${listing.id}`}
+            text={`🏆 ${listing.title} is on the IndiaBid leaderboard! Check it out:`}
+            label="Share on WhatsApp"
+            className="rounded-full border border-border px-6 py-3 text-center text-sm font-semibold text-foreground/80 hover:border-saffron"
+          />
         </div>
       </main>
       <Footer />

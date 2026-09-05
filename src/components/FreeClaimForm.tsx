@@ -6,14 +6,24 @@ import Link from "next/link";
 type Props = {
   listingId: string;
   listingTitle: string;
+  listingUrl: string;
 };
 
 type Result = { kind: "success"; dashboardToken: string } | { kind: "error"; message: string };
 
-export default function FreeClaimForm({ listingId, listingTitle }: Props) {
+function safeDomain(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "your website";
+  }
+}
+
+export default function FreeClaimForm({ listingId, listingTitle, listingUrl }: Props) {
   const [contact, setContact] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
+  const domain = safeDomain(listingUrl);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -67,12 +77,17 @@ export default function FreeClaimForm({ listingId, listingTitle }: Props) {
           Claim it for free to get access to its click-log dashboard. This doesn&apos;t cost anything
           and doesn&apos;t change its rank — ranking is a separate, optional step below.
         </p>
+        <p className="mt-1 text-xs text-muted">
+          To prevent anyone from claiming a listing that isn&apos;t theirs, we verify ownership by
+          email domain — it must match{" "}
+          <span className="font-semibold text-foreground/80">{domain}</span>.
+        </p>
       </div>
       <div className="flex flex-col gap-2 sm:flex-row">
         <input
-          type="text"
+          type="email"
           required
-          placeholder="Email or 10-digit phone"
+          placeholder={`name@${domain}`}
           value={contact}
           onChange={(e) => setContact(e.target.value)}
           className="flex-1 rounded-xl border border-border bg-surface px-3.5 py-2.5 text-sm text-foreground outline-none placeholder:text-muted focus:border-india-green"

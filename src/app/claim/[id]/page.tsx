@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import ClaimFlow from "@/components/ClaimFlow";
 import Footer from "@/components/Footer";
 import FreeClaimForm from "@/components/FreeClaimForm";
@@ -15,6 +16,26 @@ import {
 
 // The required bid amount depends on live board state — never cache this page.
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const listing = await getListingById(id);
+  if (!listing) return {};
+
+  const title = `Reclaim ${listing.title}'s spot on IndiaBid`;
+  const description = "You just got outbid — reclaim your spot for less than a fresh bid.";
+  const imageUrl = `/api/og?listingId=${id}&variant=outbid`;
+  return {
+    title,
+    description,
+    openGraph: { title, description, images: [imageUrl] },
+    twitter: { card: "summary_large_image", title, description, images: [imageUrl] },
+  };
+}
 
 export default async function ClaimPage({
   params,
@@ -58,7 +79,7 @@ export default async function ClaimPage({
         </div>
 
         {ownership && !ownership.hasOwner && (
-          <FreeClaimForm listingId={listing.id} listingTitle={listing.title} />
+          <FreeClaimForm listingId={listing.id} listingTitle={listing.title} listingUrl={listing.url} />
         )}
 
         <div className="flex flex-col gap-1">

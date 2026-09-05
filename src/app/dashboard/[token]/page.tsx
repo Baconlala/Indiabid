@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import ClickChart from "@/components/ClickChart";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import WhatsAppShareButton from "@/components/WhatsAppShareButton";
 import { formatCount, formatRupees, timeAgo } from "@/lib/format";
 import { getCategories, getListingByMagicToken, getListings, sortBoard } from "@/lib/data";
 import { clicksByDay, generateClickLog } from "@/lib/mock-clicks";
@@ -50,6 +51,23 @@ export default async function DashboardPage({
             value={listing.isClaimed ? formatRupees(listing.currentBid) : "Unclaimed"}
           />
           <StatCard label="Total clicks" value={formatCount(listing.clickCount)} />
+        </div>
+
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <WhatsAppShareButton
+            path={`/listing/${listing.id}`}
+            text={`🏆 ${listing.title} is ranked #${rank || "?"} on IndiaBid! Check it out:`}
+            label="📤 Brag about your rank"
+            className="flex-1 rounded-full border border-border px-4 py-2.5 text-center text-sm font-semibold text-foreground/80 hover:border-saffron"
+          />
+          {listing.isClaimed && rank !== 1 && (
+            <WhatsAppShareButton
+              path={`/claim/${listing.id}`}
+              text={`😱 ${listing.title} just got outbid on IndiaBid! Help reclaim the spot:`}
+              label="😱 Share that you got outbid"
+              className="flex-1 rounded-full border border-danger/40 bg-danger/10 px-4 py-2.5 text-center text-sm font-semibold text-danger hover:border-danger"
+            />
+          )}
         </div>
 
         <div className="rounded-3xl border border-border bg-surface p-5">
