@@ -5,6 +5,7 @@ import ClaimFlow from "@/components/ClaimFlow";
 import Footer from "@/components/Footer";
 import FreeClaimForm from "@/components/FreeClaimForm";
 import Header from "@/components/Header";
+import ResendDashboardLinkForm from "@/components/ResendDashboardLinkForm";
 import { computeClaimRequirement } from "@/lib/claim-logic";
 import {
   getCategories,
@@ -48,12 +49,22 @@ export async function generateMetadata({
 
 export default async function ClaimPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
   const { id } = await params;
+  const { error } = await searchParams;
   const listing = await getListingById(id);
   if (!listing) notFound();
+
+  let listingDomain = "the listing's website";
+  try {
+    listingDomain = new URL(listing.url).hostname.replace(/^www\./, "");
+  } catch {
+    // keep the generic fallback text
+  }
 
   const [categories, listings, ownership] = await Promise.all([
     getCategories(),
@@ -87,12 +98,19 @@ export default async function ClaimPage({
           </div>
         </div>
 
+        {error === "link-expired" && (
+          <div className="rounded-2xl border border-danger/40 bg-danger/10 p-3 text-center text-sm text-danger">
+            That link has expired or was already used. Request a new one below.
+          </div>
+        )}
+
         {ownership?.hasOwner === false && (
           <FreeClaimForm listingId={listing.id} listingTitle={listing.title} listingUrl={listing.url} />
         )}
         {ownership?.hasOwner === true && (
-          <div className="rounded-2xl border border-india-green/40 bg-india-green/10 p-3 text-center text-sm text-foreground/85">
+          <div className="flex flex-col items-center gap-2 rounded-2xl border border-india-green/40 bg-india-green/10 p-3 text-center text-sm text-foreground/85">
             ✅ Ownership already verified for this listing.
+            <ResendDashboardLinkForm listingId={listing.id} domain={listingDomain} />
           </div>
         )}
 

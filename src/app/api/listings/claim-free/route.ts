@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import { createServiceSupabaseClient } from "@/lib/supabase";
+import { sendOwnershipEmail } from "@/lib/email";
 import { emailMatchesListingDomain } from "@/lib/submission";
 
 function isValidEmail(v: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 }
+
+const TOKEN_TTL_MS = 30 * 60 * 1000;
+const RESEND_COOLDOWN_MS = 60 * 1000;
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -27,7 +31,7 @@ export async function POST(request: Request) {
 
   const { data: listing, error: fetchErr } = await supabase
     .from("listings")
-    .select("id, url, owner_contact")
+    .select("id, url, title, owner_contact, pending_owner_requested_at")
     .eq("id", listingId)
     .maybeSingle();
   if (fetchErr || !listing) {
@@ -52,15 +56,42 @@ export async function POST(request: Request) {
     );
   }
 
-  const { data: updated, error: updateErr } = await supabase
-    .from("listings")
-    .update({ owner_contact: contact })
-    .eq("id", listingId)
-    .select("owner_magic_token")
-    .single();
-  if (updateErr || !updated) {
-    return NextResponse.json({ error: "Could not save your claim. Please try again." }, { status: 500 });
+  if (
+    listing.pending_owner_requested_at &&
+    Date.now() - new Date(listing.pending_owner_requested_at).getTime() < RESEND_COOLDOWN_MS
+  ) {
+    return NextResponse.json(
+      { error: "We just sent a verification link — check your inbox (and spam folder) before requesting another." },
+      { status: 429 }
+    );
   }
 
-  return NextResponse.json({ dashboardToken: updated.owner_magic_token });
+  const token = crypto.randomUUID();
+  const now = new Date();
+  const { error: updateErr } = await supabase
+    .from("listings")
+    .update({
+      pending_owner_email: contact,
+      pending_owner_token: token,
+      pending_owner_token_expires_at: new Date(now.getTime() + TOKEN_TTL_MS).toISOString(),
+      pending_owner_requested_at: now.toISOString(),
+    })
+    .eq("id", listingId);
+  if (updateErr) {
+    return NextResponse.json({ error: "Could not start verification. Please try again." }, { status: 500 });
+  }
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://indiabid.vercel.app";
+  const confirmUrl = `${siteUrl}/api/listings/claim-free/confirm?token=${token}`;
+
+  try {
+    await sendOwnershipEmail(contact, { confirmUrl, listingTitle: listing.title, isNewClaim: true });
+  } catch {
+    return NextResponse.json(
+      { error: "Could not send the verification email. Please try again shortly." },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({ pending: true, email: contact });
 }

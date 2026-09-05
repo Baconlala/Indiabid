@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import Link from "next/link";
 
 type Props = {
   listingId: string;
@@ -9,7 +8,7 @@ type Props = {
   listingUrl: string;
 };
 
-type Result = { kind: "success"; dashboardToken: string } | { kind: "error"; message: string };
+type Result = { kind: "pending"; email: string } | { kind: "error"; message: string };
 
 function safeDomain(url: string): string {
   try {
@@ -37,7 +36,7 @@ export default function FreeClaimForm({ listingId, listingTitle, listingUrl }: P
       });
       const data = await res.json();
       if (res.ok) {
-        setResult({ kind: "success", dashboardToken: data.dashboardToken });
+        setResult({ kind: "pending", email: contact.trim() });
       } else {
         setResult({ kind: "error", message: data.error ?? "Something went wrong." });
       }
@@ -48,20 +47,15 @@ export default function FreeClaimForm({ listingId, listingTitle, listingUrl }: P
     }
   }
 
-  if (result?.kind === "success") {
+  if (result?.kind === "pending") {
     return (
       <div className="flex flex-col items-center gap-3 rounded-3xl border border-india-green/40 bg-india-green/10 p-6 text-center">
-        <span className="text-2xl">✅</span>
-        <h3 className="font-bold text-foreground">You own {listingTitle} now</h3>
+        <span className="text-2xl">📩</span>
+        <h3 className="font-bold text-foreground">Check {result.email}</h3>
         <p className="text-sm text-foreground/80">
-          No payment was involved — this is free. Here&apos;s your dashboard link, keep it private:
+          We&apos;ve sent a confirmation link — click it to unlock {listingTitle}&apos;s dashboard. It expires
+          in 30 minutes and only works once.
         </p>
-        <Link
-          href={`/dashboard/${result.dashboardToken}`}
-          className="rounded-full bg-india-green px-5 py-2.5 text-sm font-bold text-black"
-        >
-          Open dashboard
-        </Link>
       </div>
     );
   }
