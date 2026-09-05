@@ -26,9 +26,18 @@ export async function generateMetadata({
   const listing = await getListingById(id);
   if (!listing) return {};
 
-  const title = `Reclaim ${listing.title}'s spot on IndiaBid`;
-  const description = "You just got outbid — reclaim your spot for less than a fresh bid.";
-  const imageUrl = `/api/og?listingId=${id}&variant=outbid`;
+  const listings = await getListings();
+  const board = sortBoard(listings, listing.cityId);
+  const { mode } = computeClaimRequirement(listing, board);
+
+  const isOutbid = mode === "reclaim" || mode === "claim";
+  const title = isOutbid
+    ? `Reclaim ${listing.title}'s spot on IndiaBid`
+    : `Claim ${listing.title} on IndiaBid`;
+  const description = isOutbid
+    ? "You just got outbid — reclaim your spot for less than a fresh bid."
+    : `Claim or improve ${listing.title}'s rank on IndiaBid.`;
+  const imageUrl = `/api/og?listingId=${id}&variant=${isOutbid ? "outbid" : "ranked"}`;
   return {
     title,
     description,
@@ -78,15 +87,19 @@ export default async function ClaimPage({
           </div>
         </div>
 
-        {ownership && !ownership.hasOwner && (
+        {ownership?.hasOwner === false && (
           <FreeClaimForm listingId={listing.id} listingTitle={listing.title} listingUrl={listing.url} />
+        )}
+        {ownership?.hasOwner === true && (
+          <div className="rounded-2xl border border-india-green/40 bg-india-green/10 p-3 text-center text-sm text-foreground/85">
+            ✅ Ownership already verified for this listing.
+          </div>
         )}
 
         <div className="flex flex-col gap-1">
           <h2 className="text-sm font-bold text-foreground">Bid for rank (paid)</h2>
           <p className="text-xs text-muted">
-            Optional and separate from claiming ownership above — this is what actually moves your
-            rank on the board.
+            Separate from ownership — this is what actually moves your rank on the board.
           </p>
         </div>
         <ClaimFlow

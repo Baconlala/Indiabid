@@ -87,6 +87,7 @@ export default function FreeClaimForm({ listingId, listingTitle, listingUrl }: P
         <input
           type="email"
           required
+          aria-label="Business email for ownership verification"
           placeholder={`name@${domain}`}
           value={contact}
           onChange={(e) => setContact(e.target.value)}

@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import type { Category, CategoryGroup, City, Listing } from "@/lib/types";
 import { minimumBidToTakeLead } from "@/lib/bidding";
-import { formatRupees } from "@/lib/format";
 import { useAgeGate } from "@/lib/age-gate-context";
 import BoardTabs from "./BoardTabs";
 import BidWidget from "./BidWidget";
@@ -63,17 +62,6 @@ export default function HomeExplorer({
       />
 
       <Leaderboard listings={boardListings} categoryById={categoryById} />
-
-      <div className="fixed inset-x-4 bottom-4 z-30 sm:hidden">
-        <button
-          type="button"
-          disabled
-          title="Checkout flow is coming in the next step"
-          className="w-full rounded-full bg-saffron py-3.5 text-center text-sm font-bold text-black shadow-lg shadow-black/40 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          Claim #1 for {formatRupees(minBid)}
-        </button>
-      </div>
     </div>
   );
 }

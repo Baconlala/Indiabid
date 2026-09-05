@@ -28,7 +28,7 @@ export default function Header() {
           </Link>
           <Link
             href="/local"
-            className={`hidden rounded-full px-3 py-1.5 transition-colors sm:inline ${
+            className={`rounded-full px-3 py-1.5 transition-colors ${
               pathname.startsWith("/local") ? "text-foreground" : "text-muted hover:text-foreground"
             }`}
           >
