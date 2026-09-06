@@ -31,7 +31,9 @@ export async function generateMetadata({
   const board = sortBoard(listings, listing.cityId);
   const { mode } = computeClaimRequirement(listing, board);
 
-  const isOutbid = mode === "reclaim" || mode === "claim";
+  // Only a genuine reclaim ("you had it, someone outbid you") should use outbid
+  // framing — "claim" is a listing that has never been bid on at all.
+  const isOutbid = mode === "reclaim";
   const title = isOutbid
     ? `Reclaim ${listing.title}'s spot on IndiaBid`
     : `Claim ${listing.title} on IndiaBid`;

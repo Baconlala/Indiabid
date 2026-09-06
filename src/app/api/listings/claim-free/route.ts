@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { createServiceSupabaseClient } from "@/lib/supabase";
+import { isClaimEmailRateLimited, recordClaimEmailRequest } from "@/lib/claim-rate-limit";
 import { sendOwnershipEmail } from "@/lib/email";
-import { emailMatchesListingDomain } from "@/lib/submission";
+import { emailMatchesListingDomain, getClientIp } from "@/lib/submission";
 
 function isValidEmail(v: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
@@ -24,6 +25,16 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: "Enter an email address — this is how we verify you're affiliated with the listing." },
       { status: 400 }
+    );
+  }
+
+  // This sends an email to an address the requester hasn't proven they own —
+  // rate-limit by IP so it can't be used to blast confirmation-shaped emails.
+  const ip = getClientIp(request);
+  if (await isClaimEmailRateLimited(ip)) {
+    return NextResponse.json(
+      { error: "Too many verification requests from this connection. Try again later." },
+      { status: 429 }
     );
   }
 
@@ -83,6 +94,8 @@ export async function POST(request: Request) {
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://indiabid.vercel.app";
   const confirmUrl = `${siteUrl}/api/listings/claim-free/confirm?token=${token}`;
+
+  await recordClaimEmailRequest(ip);
 
   try {
     await sendOwnershipEmail(contact, { confirmUrl, listingTitle: listing.title, isNewClaim: true });

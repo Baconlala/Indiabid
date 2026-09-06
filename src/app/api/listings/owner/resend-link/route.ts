@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createServiceSupabaseClient } from "@/lib/supabase";
+import { isClaimEmailRateLimited, recordClaimEmailRequest } from "@/lib/claim-rate-limit";
 import { sendOwnershipEmail } from "@/lib/email";
+import { getClientIp } from "@/lib/submission";
 
 const TOKEN_TTL_MS = 30 * 60 * 1000;
 const RESEND_COOLDOWN_MS = 60 * 1000;
@@ -12,6 +14,11 @@ export async function POST(request: Request) {
 
   if (typeof listingId !== "string" || !contact) {
     return NextResponse.json({ error: "listingId and contact are required." }, { status: 400 });
+  }
+
+  const ip = getClientIp(request);
+  if (await isClaimEmailRateLimited(ip)) {
+    return NextResponse.json({ sent: true });
   }
 
   const supabase = createServiceSupabaseClient();
@@ -49,6 +56,8 @@ export async function POST(request: Request) {
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://indiabid.vercel.app";
   const confirmUrl = `${siteUrl}/api/listings/claim-free/confirm?token=${token}`;
+
+  await recordClaimEmailRequest(ip);
 
   try {
     await sendOwnershipEmail(contact, { confirmUrl, listingTitle: listing.title, isNewClaim: false });
