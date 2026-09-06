@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
 import { createServiceSupabaseClient } from "@/lib/supabase";
 import { isClaimEmailRateLimited, recordClaimEmailRequest } from "@/lib/claim-rate-limit";
+import { RESEND_COOLDOWN_MS, TOKEN_TTL_MS } from "@/lib/claim-tokens";
 import { sendOwnershipEmail } from "@/lib/email";
 import { getClientIp } from "@/lib/submission";
-
-const TOKEN_TTL_MS = 30 * 60 * 1000;
-const RESEND_COOLDOWN_MS = 60 * 1000;
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
