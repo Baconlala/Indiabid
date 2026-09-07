@@ -184,7 +184,8 @@ export default function ClaimFlow({ listing, mode, minRequired, currentLeaderBid
                   commitTypedAmount();
                 }
               }}
-              className="w-32 border-b-2 border-border bg-transparent text-center text-4xl font-black tabular-nums text-foreground outline-none focus:border-saffron"
+              style={{ width: `${Math.max(amountInput.length, 2) + 1}ch` }}
+              className="min-w-0 border-b-2 border-border bg-transparent text-center text-4xl font-black tabular-nums text-foreground outline-none focus:border-saffron"
               aria-label="Bid amount in rupees"
             />
           </div>
