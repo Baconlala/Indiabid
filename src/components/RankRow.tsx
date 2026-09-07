@@ -74,7 +74,7 @@ export default function RankRow({ rank, listing, category }: Props) {
           ) : null}
           <Link
             href={`/listing/${listing.id}`}
-            className="truncate font-semibold text-foreground hover:text-saffron hover:underline"
+            className="min-w-0 flex-1 truncate font-semibold text-foreground hover:text-saffron hover:underline"
           >
             {listing.title}
           </Link>
@@ -121,9 +121,10 @@ export default function RankRow({ rank, listing, category }: Props) {
         ) : (
           <Link
             href={`/claim/${listing.id}`}
-            className="rounded-full border border-india-green bg-india-green/10 px-3.5 py-2 text-xs font-semibold text-india-green transition-colors hover:bg-india-green/20"
+            className="whitespace-nowrap rounded-full border border-india-green bg-india-green/10 px-3.5 py-2 text-xs font-semibold text-india-green transition-colors hover:bg-india-green/20"
           >
-            Run this? Claim it free
+            <span className="sm:hidden">Claim free</span>
+            <span className="hidden sm:inline">Run this? Claim it free</span>
           </Link>
         )}
       </div>

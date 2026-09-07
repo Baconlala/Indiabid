@@ -1,7 +1,7 @@
 import Link from "next/link";
 import IndiaFlag from "./IndiaFlag";
 
-const legalLinks = [
+export const legalLinks = [
   { href: "/legal/about", label: "About" },
   { href: "/legal/rules", label: "Rules" },
   { href: "/legal/terms", label: "Terms" },

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import IndiaFlag from "./IndiaFlag";
 import LiveCounter from "./LiveCounter";
+import MobileMenu from "./MobileMenu";
 import ThemeToggle from "./ThemeToggle";
 
 export default function Header() {
@@ -34,7 +35,7 @@ export default function Header() {
           </Link>
           <Link
             href="/local"
-            className={`rounded-full px-3 py-1.5 transition-colors ${
+            className={`hidden rounded-full px-3 py-1.5 transition-colors sm:inline ${
               pathname.startsWith("/local") ? "text-foreground" : "text-muted hover:text-foreground"
             }`}
           >
@@ -42,16 +43,26 @@ export default function Header() {
           </Link>
           <Link
             href="/daily"
-            className={`rounded-full px-3 py-1.5 transition-colors ${
+            className={`hidden rounded-full px-3 py-1.5 transition-colors sm:inline ${
               pathname.startsWith("/daily") ? "text-foreground" : "text-muted hover:text-foreground"
             }`}
           >
             🔥 Daily
           </Link>
+          <MobileMenu />
           <ThemeToggle />
           <Link
             href="/submit"
-            className="rounded-full bg-foreground px-4 py-1.5 text-sm font-semibold text-background transition-opacity hover:opacity-90"
+            aria-label="Add a listing"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-foreground text-background transition-opacity hover:opacity-90 sm:hidden"
+          >
+            <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4" aria-hidden="true">
+              <path d="M10 4v12M4 10h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </Link>
+          <Link
+            href="/submit"
+            className="hidden rounded-full bg-foreground px-4 py-1.5 text-sm font-semibold text-background transition-opacity hover:opacity-90 sm:inline-block"
           >
             Add a listing
           </Link>
