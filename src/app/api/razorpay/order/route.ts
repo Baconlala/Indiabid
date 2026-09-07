@@ -7,7 +7,7 @@ import { getListingById, getListings, sortBoard } from "@/lib/data";
 export async function POST(request: Request) {
   if (process.env.NEXT_PUBLIC_PAYMENTS_ENABLED !== "true") {
     return NextResponse.json(
-      { error: "Payments are temporarily disabled — please check back soon." },
+      { error: "Payments are temporarily disabled. Please check back soon." },
       { status: 503 }
     );
   }

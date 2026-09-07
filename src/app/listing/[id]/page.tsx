@@ -99,7 +99,7 @@ export default async function ListingDetailPage({
           </a>
 
           <div className="grid grid-cols-3 gap-3 border-t border-border pt-4">
-            <Stat label="Price paid" value={listing.isClaimed ? formatRupees(listing.currentBid) : "—"} />
+            <Stat label="Price paid" value={listing.isClaimed ? formatRupees(listing.currentBid) : "-"} />
             <Stat label="Posted" value={timeAgo(listing.createdAt)} />
             <Stat label="Verified clicks" value={formatCount(listing.clickCount)} />
           </div>

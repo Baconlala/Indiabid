@@ -4,7 +4,7 @@ import TrendingToday from "@/components/TrendingToday";
 import { getCategories, getTrendingToday } from "@/lib/data";
 
 export const metadata = {
-  title: "Trending Today — IndiaBid",
+  title: "Trending Today · IndiaBid",
   description: "Who's moved the most rupees on IndiaBid in the last 24 hours.",
 };
 
@@ -24,7 +24,7 @@ export default async function DailyPage() {
             🔥 Trending today
           </h1>
           <p className="text-sm text-muted">
-            Ranked by rupees bid in the last 24 hours — separate from the permanent leaderboard.
+            Ranked by rupees bid in the last 24 hours (separate from the permanent leaderboard).
           </p>
         </div>
         <TrendingToday entries={entries} categoryById={categoryById} />

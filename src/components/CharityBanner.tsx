@@ -10,7 +10,7 @@ export default function CharityBanner({ charityDonated }: Props) {
       <span aria-hidden="true">💛</span>
       <span>
         10% of every rupee bid goes to underprivileged kids&apos; education
-        {charityDonated > 0 ? ` — ${formatRupees(charityDonated)} donated so far` : ""}.
+        {charityDonated > 0 ? `, ${formatRupees(charityDonated)} donated so far` : ""}.
       </span>
     </div>
   );

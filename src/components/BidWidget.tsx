@@ -22,7 +22,7 @@ export default function BidWidget({ boardLabel, minBid, hasLeader }: Props) {
       <p className="max-w-md text-sm text-muted">
         {hasLeader
           ? "Beat the current #1's total spend to take the top spot."
-          : "No one has claimed #1 yet on this board — be first."}
+          : "No one has claimed #1 yet on this board. Be first."}
       </p>
       <Link
         href="/submit"

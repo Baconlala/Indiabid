@@ -100,7 +100,7 @@ export default function SubmitForm({ categories, categoryGroups, cities }: Props
         <p className="text-sm text-foreground/80">
           {result.pendingReview
             ? "This category needs a quick manual check before it goes public. Check back soon."
-            : "Your listing is on the board now, unclaimed and free — anyone can claim it, including you."}
+            : "Your listing is on the board now, unclaimed and free. Anyone can claim it, including you."}
         </p>
         {!result.pendingReview && (
           <div className="mt-2 flex flex-col gap-2 sm:flex-row">
@@ -328,7 +328,7 @@ export default function SubmitForm({ categories, categoryGroups, cities }: Props
         disabled={submitting}
         className="rounded-full bg-saffron px-6 py-3.5 text-sm font-bold text-black transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {submitting ? "Adding your listing…" : "Add listing — it's free"}
+        {submitting ? "Adding your listing…" : "Add listing, it's free"}
       </button>
     </form>
   );

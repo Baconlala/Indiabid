@@ -24,7 +24,7 @@ export default function RestaurantSection({ listings, categories, cityId, cityNa
       <div className="flex flex-col gap-1">
         <h2 className="text-lg font-bold text-foreground">🍽️ Restaurants in {cityName}</h2>
         <p className="text-xs text-muted">
-          Ranked separately from the general board — same pay-to-rank rules.
+          Ranked separately from the general board (same pay-to-rank rules).
         </p>
       </div>
       <Leaderboard listings={restaurantListings} categoryById={() => restaurantCategory} />

@@ -18,7 +18,7 @@ export async function generateMetadata({
   const category = categories.find((c) => c.slug === slug);
   if (!category || (category.isSensitive && category.slug !== "adult")) return {};
 
-  const title = `${category.icon} ${category.name} — IndiaBid`;
+  const title = `${category.icon} ${category.name} · IndiaBid`;
   const description = `Who's ranked #1 in ${category.name} on IndiaBid, ranked by total paid.`;
   return { title, description, openGraph: { title, description } };
 }
@@ -44,7 +44,7 @@ export default async function CategoryPage({
             {category.icon} {category.name}
           </h1>
           <p className="text-sm text-muted">
-            Ranked by total paid — national or a city board, your choice.
+            Ranked by total paid. National or a city board, your choice.
           </p>
         </div>
         <CategoryExplorer listings={listings} category={category} cities={cities} />

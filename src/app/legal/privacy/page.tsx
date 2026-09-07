@@ -1,4 +1,4 @@
-export const metadata = { title: "Privacy Policy — IndiaBid" };
+export const metadata = { title: "Privacy Policy · IndiaBid" };
 
 export default function PrivacyPage() {
   return (
@@ -33,7 +33,7 @@ export default function PrivacyPage() {
       <h2>Owner dashboard access</h2>
       <p>
         Instead of accounts and passwords, we send a private magic link to the contact you provide
-        when you claim a listing. Anyone with that link can view that listing&apos;s dashboard —
+        when you claim a listing. Anyone with that link can view that listing&apos;s dashboard, so
         keep it private, the same way you would a password.
       </p>
 

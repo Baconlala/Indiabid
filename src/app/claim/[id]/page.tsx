@@ -38,7 +38,7 @@ export async function generateMetadata({
     ? `Reclaim ${listing.title}'s spot on IndiaBid`
     : `Claim ${listing.title} on IndiaBid`;
   const description = isOutbid
-    ? "You just got outbid — reclaim your spot for less than a fresh bid."
+    ? "You just got outbid. Reclaim your spot for less than a fresh bid."
     : `Claim or improve ${listing.title}'s rank on IndiaBid.`;
   const imageUrl = `/api/og?listingId=${id}&variant=${isOutbid ? "outbid" : "ranked"}`;
   return {
@@ -119,7 +119,7 @@ export default async function ClaimPage({
         <div className="flex flex-col gap-1">
           <h2 className="text-sm font-bold text-foreground">Bid for rank (paid)</h2>
           <p className="text-xs text-muted">
-            Separate from ownership — this is what actually moves your rank on the board.
+            Separate from ownership. This is what actually moves your rank on the board.
           </p>
         </div>
         <ClaimFlow

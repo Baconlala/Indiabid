@@ -53,7 +53,7 @@ export default function FreeClaimForm({ listingId, listingTitle, listingUrl }: P
         <span className="text-2xl">📩</span>
         <h3 className="font-bold text-foreground">Check {result.email}</h3>
         <p className="text-sm text-foreground/80">
-          We&apos;ve sent a confirmation link — click it to unlock {listingTitle}&apos;s dashboard. It expires
+          We&apos;ve sent a confirmation link. Click it to unlock {listingTitle}&apos;s dashboard. It expires
           in 30 minutes and only works once.
         </p>
       </div>
@@ -69,11 +69,11 @@ export default function FreeClaimForm({ listingId, listingTitle, listingUrl }: P
         <h3 className="font-bold text-foreground">Is {listingTitle} yours?</h3>
         <p className="text-sm text-foreground/80">
           Claim it for free to get access to its click-log dashboard. This doesn&apos;t cost anything
-          and doesn&apos;t change its rank — ranking is a separate, optional step below.
+          and doesn&apos;t change its rank. Ranking is a separate, optional step below.
         </p>
         <p className="mt-1 text-xs text-muted">
           To prevent anyone from claiming a listing that isn&apos;t theirs, we verify ownership by
-          email domain — it must match{" "}
+          email domain: it must match{" "}
           <span className="font-semibold text-foreground/80">{domain}</span>.
         </p>
       </div>

@@ -1,4 +1,4 @@
-export const metadata = { title: "About — IndiaBid" };
+export const metadata = { title: "About · IndiaBid" };
 
 export default function AboutPage() {
   return (
@@ -17,18 +17,18 @@ export default function AboutPage() {
       <h2>Why pay-to-rank</h2>
       <p>
         Most directories rank by an opaque algorithm. IndiaBid&apos;s ranking rule is one sentence:
-        whoever has paid the most, in total, holds the rank — and anyone can take it back by paying
+        whoever has paid the most, in total, holds the rank, and anyone can take it back by paying
         more. It&apos;s transparent, and it&apos;s the same rule for everyone.
       </p>
       <h2>Giving back</h2>
       <p>
         10% of every rupee bid on IndiaBid is set aside and donated to organisations working on
         underprivileged children&apos;s education in India. This isn&apos;t a marketing promise we
-        plan to make later — it comes out of the top of every payment we process.
+        plan to make later. It comes out of the top of every payment we process.
       </p>
       <h2>Contact</h2>
       <p>
-        For anything else — press, partnerships, or a listing dispute — reach us at{" "}
+        For anything else (press, partnerships, or a listing dispute), reach us at{" "}
         <a href="mailto:hello@indiabid.example" className="text-saffron hover:underline">
           hello@indiabid.example
         </a>

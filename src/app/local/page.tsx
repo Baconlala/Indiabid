@@ -5,7 +5,7 @@ import LocalExplorer from "@/components/LocalExplorer";
 import { CATEGORY_GROUPS, getCategories, getCities, getListings } from "@/lib/data";
 
 export const metadata = {
-  title: "Local Leaderboards — IndiaBid",
+  title: "Local Leaderboards · IndiaBid",
   description: "City-by-city pay-to-rank leaderboards across India.",
 };
 

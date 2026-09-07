@@ -21,7 +21,7 @@ export async function POST(request: Request) {
   // a phone number carries no signal that it belongs to the site's owner.
   if (!isValidEmail(contact)) {
     return NextResponse.json(
-      { error: "Enter an email address — this is how we verify you're affiliated with the listing." },
+      { error: "Enter an email address. This is how we verify you're affiliated with the listing." },
       { status: 400 }
     );
   }
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     }
     return NextResponse.json(
       {
-        error: `We can only verify ownership through an email at ${listingDomain} (e.g. name@${listingDomain}) — a personal or unrelated email won't work.`,
+        error: `We can only verify ownership through an email at ${listingDomain} (e.g. name@${listingDomain}). A personal or unrelated email won't work.`,
       },
       { status: 403 }
     );
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
     Date.now() - new Date(listing.pending_owner_requested_at).getTime() < RESEND_COOLDOWN_MS
   ) {
     return NextResponse.json(
-      { error: "We just sent a verification link — check your inbox (and spam folder) before requesting another." },
+      { error: "We just sent a verification link. Check your inbox (and spam folder) before requesting another." },
       { status: 429 }
     );
   }

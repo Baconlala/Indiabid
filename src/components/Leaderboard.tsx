@@ -10,7 +10,7 @@ export default function Leaderboard({ listings, categoryById }: Props) {
   if (listings.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-border p-10 text-center text-muted">
-        No listings here yet. Be the first to add one — it&apos;s free.
+        No listings here yet. Be the first to add one (it&apos;s free).
       </div>
     );
   }

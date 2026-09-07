@@ -1,4 +1,4 @@
-export const metadata = { title: "Refund and Cancellation Policy — IndiaBid" };
+export const metadata = { title: "Refund and Cancellation Policy · IndiaBid" };
 
 export default function RefundPolicyPage() {
   return (
@@ -14,7 +14,7 @@ export default function RefundPolicyPage() {
         A bid payment buys the rank position it was calculated for at the moment of payment, not a
         guaranteed rank for any length of time (outside an active premium lock). Because rank can
         change the instant someone else outbids you, we do not offer refunds for being outranked
-        after a successful payment — this is made clear in the consent step before every checkout.
+        after a successful payment. This is made clear in the consent step before every checkout.
       </p>
 
       <h2>When we will refund</h2>

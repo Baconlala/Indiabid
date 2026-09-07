@@ -1,4 +1,4 @@
-export const metadata = { title: "Terms of Service — IndiaBid" };
+export const metadata = { title: "Terms of Service · IndiaBid" };
 
 export default function TermsPage() {
   return (

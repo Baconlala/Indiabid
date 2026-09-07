@@ -45,7 +45,7 @@ export default async function DashboardPage({
         </div>
 
         <div className="grid grid-cols-3 gap-3">
-          <StatCard label="Current rank" value={rank > 0 ? `#${rank}` : "—"} />
+          <StatCard label="Current rank" value={rank > 0 ? `#${rank}` : "-"} />
           <StatCard
             label="Current bid"
             value={listing.isClaimed ? formatRupees(listing.currentBid) : "Unclaimed"}

@@ -18,7 +18,7 @@ export default function Footer() {
           <span className="text-sm font-bold">
             India<span className="text-saffron">Bid</span>
           </span>
-          <span className="text-xs text-muted">— Made in India, For India</span>
+          <span className="text-xs text-muted">Made in India, For India</span>
         </div>
         <nav className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted">
           {legalLinks.map((link) => (

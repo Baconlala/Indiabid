@@ -70,7 +70,7 @@ export default function ClaimFlow({ listing, mode, minRequired, currentLeaderBid
 
       const loaded = await loadRazorpayScript();
       if (!loaded || !window.Razorpay) {
-        setResult({ kind: "error", message: "Could not load Razorpay checkout — check your connection." });
+        setResult({ kind: "error", message: "Could not load Razorpay checkout. Check your connection." });
         setSubmitting(null);
         return;
       }
@@ -80,7 +80,7 @@ export default function ClaimFlow({ listing, mode, minRequired, currentLeaderBid
         amount: order.amountPaise,
         currency: order.currency,
         name: "IndiaBid",
-        description: `${isLock ? `Lock #1 for ${PREMIUM_LOCK_HOURS}h` : "Claim rank"} — ${listing.title}`,
+        description: `${isLock ? `Lock #1 for ${PREMIUM_LOCK_HOURS}h` : "Claim rank"}: ${listing.title}`,
         order_id: order.orderId,
         theme: { color: "#ff9933" },
         modal: { ondismiss: () => setSubmitting(null) },
@@ -134,7 +134,7 @@ export default function ClaimFlow({ listing, mode, minRequired, currentLeaderBid
         </p>
         {result.persisted ? (
           <p className="text-xs text-muted">
-            The leaderboard has been updated — {listing.title} now reflects this bid.
+            The leaderboard has been updated. {listing.title} now reflects this bid.
           </p>
         ) : (
           <p className="text-xs text-danger">
@@ -161,7 +161,7 @@ export default function ClaimFlow({ listing, mode, minRequired, currentLeaderBid
         </div>
       ) : mode === "reclaim" ? (
         <div className="rounded-2xl border border-saffron/40 bg-saffron/10 p-4 text-sm text-foreground/85">
-          {listing.title} was outranked. Reclaiming only costs the gap to the new leader plus ₹10 —
+          {listing.title} was outranked. Reclaiming only costs the gap to the new leader plus ₹10,
           not a fresh full bid.
         </div>
       ) : null}
@@ -201,7 +201,7 @@ export default function ClaimFlow({ listing, mode, minRequired, currentLeaderBid
         </div>
         {atMax ? (
           <span className="text-xs font-semibold text-saffron">
-            Maximum bid reached — {formatRupees(MAX_BID)} is the highest amount you can bid.
+            Maximum bid reached: {formatRupees(MAX_BID)} is the highest amount you can bid.
           </span>
         ) : (
           <span className="text-xs text-muted">
@@ -226,8 +226,17 @@ export default function ClaimFlow({ listing, mode, minRequired, currentLeaderBid
       </div>
 
       {!PAYMENTS_ENABLED && (
-        <div className="rounded-2xl border border-gold/40 bg-gold/10 p-4 text-center text-sm font-semibold text-gold">
-          ⏸️ Payments are temporarily disabled — please check back soon.
+        <div className="flex flex-col items-center gap-1 rounded-2xl border border-gold/40 bg-gold/10 p-4 text-center text-sm">
+          <span className="font-semibold text-gold">
+            ⏸️ Payments are temporarily disabled. Please check back soon.
+          </span>
+          <span className="text-xs font-medium text-foreground/70">
+            You can still{" "}
+            <Link href="/submit" className="underline hover:text-foreground">
+              list your business on IndiaBid for free
+            </Link>
+            .
+          </span>
         </div>
       )}
 
@@ -239,8 +248,8 @@ export default function ClaimFlow({ listing, mode, minRequired, currentLeaderBid
           className="mt-0.5 h-4 w-4 shrink-0 accent-saffron"
         />
         <span>
-          I understand my rank is not guaranteed if I get outbid later, and that this payment is final —
-          no refunds for rank changes.
+          I understand my rank is not guaranteed if I get outbid later, and that this payment is final,
+          with no refunds for rank changes.
         </span>
       </label>
 

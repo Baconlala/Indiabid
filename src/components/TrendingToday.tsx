@@ -12,7 +12,7 @@ export default function TrendingToday({ entries, categoryById }: Props) {
   if (entries.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted">
-        No bids in the last 24h yet — be the first to move the board today.
+        No bids in the last 24h yet. Be the first to move the board today.
       </div>
     );
   }

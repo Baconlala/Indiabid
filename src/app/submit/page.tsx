@@ -6,7 +6,7 @@ import { CATEGORY_GROUPS, getCategories, getCities } from "@/lib/data";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Add a Listing — IndiaBid",
+  title: "Add a Listing · IndiaBid",
   description: "Add your business or product to the leaderboard for free.",
 };
 
@@ -22,7 +22,7 @@ export default async function SubmitPage() {
             Add a listing
           </h1>
           <p className="text-sm text-muted">
-            Free to add. Rank is earned separately — you can claim a spot right after.
+            Free to add. Rank is earned separately, and you can claim a spot right after.
           </p>
         </div>
         <SubmitForm categories={categories} categoryGroups={CATEGORY_GROUPS} cities={cities} />

@@ -43,7 +43,7 @@ export default function ResendDashboardLinkForm({ listingId, domain }: Props) {
   if (sent) {
     return (
       <p className="text-xs text-foreground/80">
-        If that email owns this listing, we&apos;ve sent a dashboard link to it — check your inbox.
+        If that email owns this listing, we&apos;ve sent a dashboard link to it. Check your inbox.
       </p>
     );
   }

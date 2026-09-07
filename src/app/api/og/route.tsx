@@ -83,7 +83,7 @@ export async function GET(request: Request) {
             }}
           >
             <span style={{ fontSize: 96, fontWeight: 800, color: accent }}>
-              {rank > 0 ? `#${rank}` : "—"}
+              {rank > 0 ? `#${rank}` : "-"}
             </span>
             <div style={{ display: "flex", flexDirection: "column" }}>
               <span style={{ fontSize: 48, fontWeight: 700, color: "#f4f4f2" }}>{listing.title}</span>
