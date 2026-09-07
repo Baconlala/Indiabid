@@ -8,14 +8,17 @@ type Props = {
   category: Category | undefined;
 };
 
-// Top-3 get a colored numeral and a thin left accent border — nothing more.
-// No medals, no gradient fills; the number stays the focus and the accent is
-// a single flat line, the same language dashboards use for status, not a
-// decoration bolted onto a leaderboard row.
-const PODIUM: Record<number, { text: string; accent: string }> = {
-  1: { text: "text-gold", accent: "border-l-gold" },
-  2: { text: "text-zinc-400", accent: "border-l-zinc-400" },
-  3: { text: "text-amber-700", accent: "border-l-amber-700" },
+// Top-3 get a colored numeral and a thin left accent bar — nothing more. No
+// medals, no gradient fills; the number stays the focus and the accent is a
+// single flat line, the same language dashboards use for status, not a
+// decoration bolted onto a leaderboard row. Drawn as its own absolutely
+// positioned element rather than a border-left utility, since unclaimed rows
+// use a dashed card border and a border-left would inherit that dash pattern
+// instead of rendering as a clean solid bar.
+const PODIUM: Record<number, { text: string; bar: string }> = {
+  1: { text: "text-gold", bar: "bg-gold" },
+  2: { text: "text-zinc-400", bar: "bg-zinc-400" },
+  3: { text: "text-amber-700", bar: "bg-amber-700" },
 };
 
 function rankColor(rank: number): string {
@@ -28,12 +31,13 @@ export default function RankRow({ rank, listing, category }: Props) {
 
   return (
     <div
-      className={`group flex items-center gap-4 rounded-2xl border p-3 transition-colors sm:gap-5 sm:p-4 ${
+      className={`group relative flex items-center gap-4 overflow-hidden rounded-2xl border p-3 transition-colors sm:gap-5 sm:p-4 ${
         listing.isClaimed
           ? "border-border bg-surface hover:border-saffron/40"
           : "border-dashed border-border/70 bg-transparent"
-      } ${podium ? `border-l-[3px] ${podium.accent}` : ""}`}
+      }`}
     >
+      {podium && <span className={`absolute inset-y-0 left-0 w-[3px] ${podium.bar}`} aria-hidden="true" />}
       <div
         className={`w-10 shrink-0 text-center text-3xl font-black tabular-nums sm:w-14 sm:text-4xl ${rankColor(rank)}`}
       >
