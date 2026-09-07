@@ -44,7 +44,12 @@ const BLOCKED_DOMAINS = new Set([
 
 export type UrlCheckResult = { ok: true; normalized: string } | { ok: false; reason: string };
 
-/** Strips tracking params, drops the trailing slash, lowercases the hostname. */
+/**
+ * Strips tracking params, the "www." prefix, and the trailing slash;
+ * lowercases the hostname; and always normalizes to https. This is what
+ * duplicate-listing detection keys off, so http vs https and www vs
+ * non-www variants of the same site must resolve to the same value.
+ */
 export function normalizeUrl(raw: string): UrlCheckResult {
   let url: URL;
   try {
@@ -57,19 +62,20 @@ export function normalizeUrl(raw: string): UrlCheckResult {
     return { ok: false, reason: "URL must start with http:// or https://." };
   }
 
-  const hostname = url.hostname.toLowerCase();
+  const hostname = url.hostname.toLowerCase().replace(/^www\./, "");
   if (hostname === "localhost" || /^(\d{1,3}\.){3}\d{1,3}$/.test(hostname)) {
     return { ok: false, reason: "Please use a real public URL, not a local address." };
   }
 
   if (BLOCKED_DOMAINS.has(hostname)) {
-    return { ok: false, reason: "Shortened links aren't allowed — please use the direct URL." };
+    return { ok: false, reason: "Shortened links aren't allowed. Please use the direct URL." };
   }
 
   for (const param of TRACKING_PARAMS) {
     url.searchParams.delete(param);
   }
 
+  url.protocol = "https:";
   url.hostname = hostname;
   url.hash = "";
   let normalized = url.toString();
