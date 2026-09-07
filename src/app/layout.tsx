@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { AgeGateProvider } from "@/lib/age-gate-context";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -34,6 +35,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
           <AgeGateProvider>{children}</AgeGateProvider>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
