@@ -23,6 +23,7 @@ export type City = {
 
 export type Listing = {
   id: string;
+  slug: string;
   url: string;
   title: string;
   description: string;

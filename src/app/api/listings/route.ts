@@ -68,12 +68,17 @@ export async function POST(request: Request) {
 
   switch (result.status) {
     case "created":
-      return NextResponse.json({ listingId: result.listingId, pendingReview: result.pendingReview });
+      return NextResponse.json({
+        listingId: result.listingId,
+        slug: result.slug,
+        pendingReview: result.pendingReview,
+      });
     case "duplicate":
       return NextResponse.json(
         {
           error: `This is already listed as "${result.existingTitle}".`,
           existingListingId: result.existingListingId,
+          existingSlug: result.existingSlug,
         },
         { status: 409 }
       );

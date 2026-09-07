@@ -81,7 +81,7 @@ export default async function ClaimPage({
     <>
       <Header />
       <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-6 px-4 py-8 pb-16 sm:px-6">
-        <Link href={`/listing/${listing.id}`} className="text-sm text-muted hover:text-foreground">
+        <Link href={`/listing/${listing.slug}`} className="text-sm text-muted hover:text-foreground">
           ← Back to {listing.title}
         </Link>
 

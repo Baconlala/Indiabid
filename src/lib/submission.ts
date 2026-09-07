@@ -86,6 +86,22 @@ export function normalizeUrl(raw: string): UrlCheckResult {
   return { ok: true, normalized };
 }
 
+// Combining diacritical marks (U+0300-U+036F) left behind by NFKD normalization.
+const COMBINING_MARKS = new RegExp("[\\u0300-\\u036f]", "g");
+
+/** Turns a title into a URL-safe slug, e.g. "Chai & Code" -> "chai-code". */
+export function slugify(text: string): string {
+  const base = text
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(COMBINING_MARKS, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60)
+    .replace(/-+$/, "");
+  return base || "listing";
+}
+
 export function faviconUrl(normalizedUrl: string): string {
   const hostname = new URL(normalizedUrl).hostname;
   return `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`;

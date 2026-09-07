@@ -55,7 +55,7 @@ export default async function DashboardPage({
 
         <div className="flex flex-col gap-2 sm:flex-row">
           <WhatsAppShareButton
-            path={`/listing/${listing.id}`}
+            path={`/listing/${listing.slug}`}
             text={`🏆 ${listing.title} is ranked #${rank || "?"} on IndiaBid! Check it out:`}
             label="📤 Brag about your rank"
             className="flex-1 rounded-full border border-border px-4 py-2.5 text-center text-sm font-semibold text-foreground/80 hover:border-saffron"

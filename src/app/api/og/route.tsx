@@ -31,6 +31,8 @@ export async function GET(request: Request) {
   const board = sortBoard(listings, listing.cityId);
   const rank = board.findIndex((l) => l.id === listing.id) + 1;
 
+  const siteDomain = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://indiabid.vercel.app").replace(/^https?:\/\//, "");
+
   const isOutbid = variant === "outbid";
   const accent = isOutbid ? "#ff6b6b" : "#f4c542";
   const headline = isOutbid ? "😱 YOU'VE BEEN OUTBID" : "🏆 RANKED ON INDIABID";
@@ -104,7 +106,7 @@ export async function GET(request: Request) {
         </div>
 
         <div style={{ display: "flex", justifyContent: "center" }}>
-          <span style={{ fontSize: 22, color: "#57575f" }}>indiabid.vercel.app</span>
+          <span style={{ fontSize: 22, color: "#57575f" }}>{siteDomain}</span>
         </div>
       </div>
     ),

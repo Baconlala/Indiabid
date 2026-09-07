@@ -11,8 +11,8 @@ type Props = {
 };
 
 type Result =
-  | { kind: "success"; listingId: string; pendingReview: boolean }
-  | { kind: "duplicate"; existingListingId: string; existingTitle: string }
+  | { kind: "success"; listingId: string; slug: string; pendingReview: boolean }
+  | { kind: "duplicate"; existingListingId: string; existingSlug: string; existingTitle: string }
   | { kind: "error"; message: string };
 
 const MAX_TITLE = 80;
@@ -77,9 +77,14 @@ export default function SubmitForm({ categories, categoryGroups, cities }: Props
       const data = await res.json();
 
       if (res.ok) {
-        setResult({ kind: "success", listingId: data.listingId, pendingReview: data.pendingReview });
+        setResult({ kind: "success", listingId: data.listingId, slug: data.slug, pendingReview: data.pendingReview });
       } else if (res.status === 409) {
-        setResult({ kind: "duplicate", existingListingId: data.existingListingId, existingTitle: data.error });
+        setResult({
+          kind: "duplicate",
+          existingListingId: data.existingListingId,
+          existingSlug: data.existingSlug,
+          existingTitle: data.error,
+        });
       } else {
         setResult({ kind: "error", message: data.error ?? "Something went wrong. Please try again." });
       }
@@ -105,7 +110,7 @@ export default function SubmitForm({ categories, categoryGroups, cities }: Props
         {!result.pendingReview && (
           <div className="mt-2 flex flex-col gap-2 sm:flex-row">
             <Link
-              href={`/listing/${result.listingId}`}
+              href={`/listing/${result.slug}`}
               className="rounded-full border border-border px-5 py-2.5 text-sm font-semibold text-foreground"
             >
               View listing
@@ -302,7 +307,7 @@ export default function SubmitForm({ categories, categoryGroups, cities }: Props
       {result?.kind === "duplicate" && (
         <div className="rounded-2xl border border-saffron/40 bg-saffron/10 p-3 text-center text-sm text-foreground/85">
           {result.existingTitle}{" "}
-          <Link href={`/listing/${result.existingListingId}`} className="font-semibold text-saffron underline">
+          <Link href={`/listing/${result.existingSlug}`} className="font-semibold text-saffron underline">
             View it
           </Link>{" "}
           or{" "}

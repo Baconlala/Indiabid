@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import CopyLinkButton from "@/components/CopyLinkButton";
 import Footer from "@/components/Footer";
@@ -12,6 +12,7 @@ import {
   getCities,
   getListingActivity,
   getListingById,
+  getListingBySlug,
   getListingTodayActivity,
   getListings,
   sortBoard,
@@ -21,13 +22,20 @@ import type { ActivityEvent, ActivityEventType, Listing } from "@/lib/types";
 // Bid/claim state can change at any moment — never serve a stale cached listing.
 export const dynamic = "force-dynamic";
 
+/** Looks up by slug first; falls back to id so links shared before the slug switch still work. */
+async function resolveListing(slugOrId: string): Promise<Listing | null> {
+  const bySlug = await getListingBySlug(slugOrId);
+  if (bySlug) return bySlug;
+  return getListingById(slugOrId);
+}
+
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-  const { id } = await params;
-  const listing = await getListingById(id);
+  const { slug } = await params;
+  const listing = await resolveListing(slug);
   if (!listing) return {};
 
   const listings = await getListings();
@@ -35,7 +43,7 @@ export async function generateMetadata({
   const rank = board.findIndex((l) => l.id === listing.id) + 1;
 
   const title = rank > 0 ? `${listing.title} · #${rank} on IndiaBid` : `${listing.title} on IndiaBid`;
-  const imageUrl = `/api/og?listingId=${id}&variant=ranked`;
+  const imageUrl = `/api/og?listingId=${listing.id}&variant=ranked`;
   return {
     title,
     description: listing.description,
@@ -54,18 +62,20 @@ const ACTIVITY_LABEL: Record<ActivityEventType, string> = {
 export default async function ListingDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }) {
-  const { id } = await params;
-  const listing = await getListingById(id);
+  const { slug } = await params;
+  const listing = await resolveListing(slug);
   if (!listing) notFound();
+  // An old /listing/{uuid} link — send it to the canonical, shareable slug URL.
+  if (slug !== listing.slug) redirect(`/listing/${listing.slug}`);
 
   const [categories, cities, listings, todayActivity, activity] = await Promise.all([
     getCategories(),
     getCities(),
     getListings(),
-    getListingTodayActivity(id),
-    getListingActivity(id),
+    getListingTodayActivity(listing.id),
+    getListingActivity(listing.id),
   ]);
   const category = categories.find((c) => c.id === listing.categoryId);
   const city = listing.cityId ? cities.find((c) => c.id === listing.cityId) : null;
@@ -159,12 +169,12 @@ export default async function ListingDetailPage({
               {listing.isClaimed ? "Claim this rank" : "Run this? Claim it free"}
             </Link>
             <CopyLinkButton
-              path={`/listing/${listing.id}`}
+              path={`/listing/${listing.slug}`}
               className="rounded-full border border-border px-6 py-3 text-center text-sm font-semibold text-foreground/80 hover:border-saffron"
             />
           </div>
           <WhatsAppShareButton
-            path={`/listing/${listing.id}`}
+            path={`/listing/${listing.slug}`}
             text={`🏆 ${listing.title} is on the IndiaBid leaderboard! Check it out:`}
             label="Share on WhatsApp"
             className="rounded-full border border-border px-6 py-3 text-center text-sm font-semibold text-foreground/80 hover:border-saffron"
@@ -194,7 +204,7 @@ export default async function ListingDetailPage({
               <div className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-4 text-sm">
                 <span className="text-foreground/80">
                   {formatRupees(gapToLead)} behind{" "}
-                  <Link href={`/listing/${leader.id}`} className="font-semibold text-foreground hover:text-saffron">
+                  <Link href={`/listing/${leader.slug}`} className="font-semibold text-foreground hover:text-saffron">
                     {leader.title}
                   </Link>{" "}
                   for #1
@@ -260,7 +270,7 @@ export default async function ListingDetailPage({
               {nearby.map((l) => (
                 <Link
                   key={l.id}
-                  href={`/listing/${l.id}`}
+                  href={`/listing/${l.slug}`}
                   className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-3 text-sm transition-colors hover:border-saffron/40"
                 >
                   <span className="min-w-0 flex-1 truncate font-medium text-foreground">{l.title}</span>

@@ -24,7 +24,7 @@ export default function TrendingToday({ entries, categoryById }: Props) {
         return (
           <Link
             key={entry.listing.id}
-            href={`/listing/${entry.listing.id}`}
+            href={`/listing/${entry.listing.slug}`}
             className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3 transition-colors hover:border-saffron/40"
           >
             <span className="w-6 shrink-0 text-center text-sm font-bold text-muted">{i + 1}</span>

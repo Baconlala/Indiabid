@@ -1,9 +1,26 @@
 import { createServiceSupabaseClient } from "./supabase";
-import { faviconUrl, normalizeUrl } from "./submission";
+import { faviconUrl, normalizeUrl, slugify } from "./submission";
 
 const RATE_LIMIT_WINDOW_HOURS = 1;
 const MAX_PER_IP_PER_WINDOW = 5;
 const MAX_PER_PHONE_PER_DAY = 3;
+
+/** Appends -2, -3, ... to baseSlug until it doesn't collide with an active listing. */
+async function uniqueSlug(
+  supabase: ReturnType<typeof createServiceSupabaseClient>,
+  baseSlug: string
+): Promise<string> {
+  const { data: taken } = await supabase
+    .from("listings")
+    .select("slug")
+    .eq("is_active", true)
+    .like("slug", `${baseSlug}%`);
+  const takenSlugs = new Set((taken ?? []).map((r) => r.slug));
+  if (!takenSlugs.has(baseSlug)) return baseSlug;
+  let n = 2;
+  while (takenSlugs.has(`${baseSlug}-${n}`)) n++;
+  return `${baseSlug}-${n}`;
+}
 
 export type CreateListingInput = {
   url: string;
@@ -17,8 +34,8 @@ export type CreateListingInput = {
 };
 
 export type CreateListingResult =
-  | { status: "created"; listingId: string; pendingReview: boolean }
-  | { status: "duplicate"; existingListingId: string; existingTitle: string }
+  | { status: "created"; listingId: string; slug: string; pendingReview: boolean }
+  | { status: "duplicate"; existingListingId: string; existingSlug: string; existingTitle: string }
   | { status: "rate_limited"; reason: string }
   | { status: "error"; message: string };
 
@@ -34,12 +51,17 @@ export async function createListing(input: CreateListingInput): Promise<CreateLi
   // Dedupe: same URL can't be listed twice.
   const { data: existing } = await supabase
     .from("listings")
-    .select("id, title")
+    .select("id, slug, title")
     .eq("normalized_url", url)
     .eq("is_active", true)
     .maybeSingle();
   if (existing) {
-    return { status: "duplicate", existingListingId: existing.id, existingTitle: existing.title };
+    return {
+      status: "duplicate",
+      existingListingId: existing.id,
+      existingSlug: existing.slug,
+      existingTitle: existing.title,
+    };
   }
 
   const windowStart = new Date(Date.now() - RATE_LIMIT_WINDOW_HOURS * 60 * 60 * 1000).toISOString();
@@ -72,6 +94,7 @@ export async function createListing(input: CreateListingInput): Promise<CreateLi
   }
 
   const moderationStatus = category.is_sensitive ? "pending" : "approved";
+  const slug = await uniqueSlug(supabase, slugify(input.title));
 
   const { data: inserted, error: insertErr } = await supabase
     .from("listings")
@@ -90,8 +113,9 @@ export async function createListing(input: CreateListingInput): Promise<CreateLi
       is_active: true,
       is_claimed: false,
       current_bid: 0,
+      slug,
     })
-    .select("id")
+    .select("id, slug")
     .single();
 
   if (insertErr || !inserted) {
@@ -107,5 +131,10 @@ export async function createListing(input: CreateListingInput): Promise<CreateLi
     });
   }
 
-  return { status: "created", listingId: inserted.id, pendingReview: moderationStatus === "pending" };
+  return {
+    status: "created",
+    listingId: inserted.id,
+    slug: inserted.slug,
+    pendingReview: moderationStatus === "pending",
+  };
 }

@@ -13,6 +13,7 @@ export const CATEGORY_GROUPS = [
 
 type ListingRow = {
   id: string;
+  slug: string;
   url: string;
   title: string;
   description: string;
@@ -32,6 +33,10 @@ type ListingRow = {
 function mapListing(row: ListingRow): Listing {
   return {
     id: row.id,
+    // Falls back to the id if a row has no slug yet (e.g. mid-migration,
+    // before the backfill runs) — resolveListing() tries slug first, then
+    // id, so a link built from this never 404s either way.
+    slug: row.slug || row.id,
     url: row.url,
     title: row.title,
     description: row.description,
@@ -92,6 +97,22 @@ export async function getListingById(id: string): Promise<Listing | null> {
   return data ? mapListing(data) : null;
 }
 
+export async function getListingBySlug(slug: string): Promise<Listing | null> {
+  const supabase = createBrowserSupabaseClient();
+  const { data, error } = await supabase
+    .from("listings_public")
+    .select("*")
+    .eq("slug", slug)
+    .maybeSingle();
+  if (error) {
+    // 42703 = column doesn't exist — migration 0011 not applied yet. Fail
+    // soft so callers fall back to id-based lookup instead of a 500.
+    if (error.code === "42703") return null;
+    throw error;
+  }
+  return data ? mapListing(data) : null;
+}
+
 /** Server-only: whether a listing already has an owner on file (never exposes the contact itself). */
 export async function getListingOwnershipStatus(id: string): Promise<{ hasOwner: boolean } | null> {
   const supabase = createServiceSupabaseClient();
@@ -113,7 +134,7 @@ export async function getListingByMagicToken(token: string): Promise<Listing | n
   const { data, error } = await supabase
     .from("listings")
     .select(
-      "id, url, title, description, category_id, city_id, current_bid, is_claimed, is_locked, locked_until, image_url, favicon_url, click_count, created_at, last_bid_at, is_active"
+      "id, slug, url, title, description, category_id, city_id, current_bid, is_claimed, is_locked, locked_until, image_url, favicon_url, click_count, created_at, last_bid_at, is_active"
     )
     .eq("owner_magic_token", token)
     .eq("is_active", true)
@@ -125,6 +146,7 @@ export async function getListingByMagicToken(token: string): Promise<Listing | n
   if (!data) return null;
   return {
     id: data.id,
+    slug: data.slug || data.id,
     url: data.url,
     title: data.title,
     description: data.description,

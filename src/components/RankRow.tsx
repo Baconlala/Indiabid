@@ -73,7 +73,7 @@ export default function RankRow({ rank, listing, category }: Props) {
             <img src={listing.faviconUrl} alt="" className="h-4 w-4 rounded-sm" />
           ) : null}
           <Link
-            href={`/listing/${listing.id}`}
+            href={`/listing/${listing.slug}`}
             className="min-w-0 flex-1 truncate font-semibold text-foreground hover:text-saffron hover:underline"
           >
             {listing.title}

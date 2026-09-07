@@ -143,7 +143,7 @@ export default function ClaimFlow({ listing, mode, minRequired, currentLeaderBid
           </p>
         )}
         <Link
-          href={`/listing/${listing.id}`}
+          href={`/listing/${listing.slug}`}
           className="mt-2 rounded-full bg-saffron px-5 py-2 text-sm font-bold text-black"
         >
           View listing
