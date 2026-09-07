@@ -1,8 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
 import type { City } from "@/lib/types";
-import HScroller from "./HScroller";
 import IndiaFlag from "./IndiaFlag";
 
 type Props = {
@@ -12,43 +10,53 @@ type Props = {
 };
 
 export default function BoardTabs({ cities, selected, onSelect }: Props) {
-  return (
-    <HScroller
-      id="board-tabs"
-      scrollClassName="flex min-w-0 scroll-mt-20 gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-    >
-      <Tab active={selected === null} onClick={() => onSelect(null)}>
-        <IndiaFlag className="h-3.5 w-5" /> National
-      </Tab>
-      {cities.map((city) => (
-        <Tab key={city.id} active={selected === city.id} onClick={() => onSelect(city.id)}>
-          {city.name}
-        </Tab>
-      ))}
-    </HScroller>
-  );
-}
+  const cityActive = selected !== null;
 
-function Tab({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: ReactNode;
-}) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap transition-colors ${
-        active
-          ? "bg-foreground text-background"
-          : "bg-surface text-foreground/70 hover:text-foreground"
-      }`}
-    >
-      {children}
-    </button>
+    <div className="flex min-w-0 items-center gap-2">
+      <button
+        type="button"
+        onClick={() => onSelect(null)}
+        className={`flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap transition-colors ${
+          !cityActive
+            ? "bg-foreground text-background"
+            : "bg-surface text-foreground/70 hover:text-foreground"
+        }`}
+      >
+        <IndiaFlag className="h-3.5 w-5" /> National
+      </button>
+
+      <div className="relative min-w-0 flex-1 sm:flex-none">
+        <select
+          value={selected ?? ""}
+          onChange={(e) => onSelect(e.target.value || null)}
+          aria-label="Choose your city"
+          className={`w-full min-w-0 cursor-pointer appearance-none rounded-full py-2 pr-9 pl-4 text-sm font-semibold transition-colors outline-none sm:w-auto ${
+            cityActive
+              ? "bg-foreground text-background"
+              : "bg-surface text-foreground/70 hover:text-foreground"
+          }`}
+        >
+          <option value="" disabled>
+            Choose your city
+          </option>
+          {cities.map((city) => (
+            <option key={city.id} value={city.id}>
+              {city.name}
+            </option>
+          ))}
+        </select>
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 20 20"
+          fill="none"
+          className={`pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 ${
+            cityActive ? "text-background/70" : "text-foreground/50"
+          }`}
+        >
+          <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </div>
+    </div>
   );
 }
