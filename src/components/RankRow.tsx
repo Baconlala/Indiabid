@@ -73,7 +73,7 @@ export default function RankRow({ rank, listing, category }: Props) {
           )}
         </div>
         <p className="mt-0.5 line-clamp-1 text-sm text-muted">{listing.description}</p>
-        <div className="mt-1 flex items-center gap-2 text-xs text-muted">
+        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted">
           {category && (
             <span>
               {category.icon} {category.name}

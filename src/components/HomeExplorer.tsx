@@ -52,8 +52,6 @@ export default function HomeExplorer({
     <div className="flex min-w-0 flex-col gap-8">
       <BoardTabs cities={cities} selected={cityId} onSelect={onCityChange} />
 
-      <BidWidget boardLabel={boardLabel} minBid={minBid} hasLeader={topBid > 0} />
-
       <CategoryPills
         categories={categories}
         groups={categoryGroups}
@@ -62,6 +60,8 @@ export default function HomeExplorer({
       />
 
       <Leaderboard listings={boardListings} categoryById={categoryById} />
+
+      <BidWidget boardLabel={boardLabel} minBid={minBid} hasLeader={topBid > 0} />
     </div>
   );
 }

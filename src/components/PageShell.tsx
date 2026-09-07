@@ -31,7 +31,7 @@ export default function PageShell({
   return (
     <>
       <Header />
-      <main className="mx-auto flex w-full min-w-0 max-w-5xl flex-1 flex-col gap-12 px-4 pb-16 sm:px-6">
+      <main className="mx-auto flex w-full min-w-0 max-w-5xl flex-1 flex-col gap-6 px-4 pb-16 sm:gap-12 sm:px-6">
         <Hero />
         <CharityBanner charityDonated={charityDonated} />
         <AgeGateBanner />
