@@ -15,11 +15,14 @@ const supabase = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE
 
 const COMBINING_MARKS = new RegExp("[\\u0300-\\u036f]", "g");
 
+const APOSTROPHES = /['’]/g;
+
 function slugify(text) {
   const base = text
     .toLowerCase()
     .normalize("NFKD")
     .replace(COMBINING_MARKS, "")
+    .replace(APOSTROPHES, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 60)

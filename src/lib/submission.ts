@@ -89,12 +89,18 @@ export function normalizeUrl(raw: string): UrlCheckResult {
 // Combining diacritical marks (U+0300-U+036F) left behind by NFKD normalization.
 const COMBINING_MARKS = new RegExp("[\\u0300-\\u036f]", "g");
 
+// Apostrophes (straight or curly) are dropped rather than treated as a word
+// break, so "Haldiram's" becomes "haldirams", not the broken-looking
+// "haldiram-s".
+const APOSTROPHES = /['’]/g;
+
 /** Turns a title into a URL-safe slug, e.g. "Chai & Code" -> "chai-code". */
 export function slugify(text: string): string {
   const base = text
     .toLowerCase()
     .normalize("NFKD")
     .replace(COMBINING_MARKS, "")
+    .replace(APOSTROPHES, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 60)
