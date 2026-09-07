@@ -3,7 +3,9 @@ import type { Metadata } from "next";
 import CategoryExplorer from "@/components/CategoryExplorer";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
-import { getCategories, getCities, getListings } from "@/lib/data";
+import JsonLd from "@/components/JsonLd";
+import { getCategories, getCities, getListings, sortBoard } from "@/lib/data";
+import { itemListSchema } from "@/lib/structured-data";
 
 // Rank can change at any moment — never serve a stale cached board.
 export const dynamic = "force-dynamic";
@@ -35,8 +37,17 @@ export default async function CategoryPage({
   // Other sensitive categories (gambling, MLM) have no public unlock path at all.
   if (!category || (category.isSensitive && category.slug !== "adult")) notFound();
 
+  const categoryBoard = sortBoard(listings, null).filter((l) => l.categoryId === category.id);
+
   return (
     <>
+      <JsonLd
+        data={itemListSchema(
+          categoryBoard,
+          `${category.name} — IndiaBid`,
+          `Who's ranked #1 in ${category.name} on IndiaBid, ranked by total paid.`
+        )}
+      />
       <Header />
       <main className="mx-auto flex w-full min-w-0 max-w-5xl flex-1 flex-col gap-8 px-4 py-8 pb-16 sm:px-6">
         <div className="flex flex-col gap-1">

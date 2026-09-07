@@ -1,5 +1,6 @@
 import Link from "next/link";
 import ActivityFeed from "@/components/ActivityFeed";
+import JsonLd from "@/components/JsonLd";
 import PageShell from "@/components/PageShell";
 import StatsBar from "@/components/StatsBar";
 import TrendingToday from "@/components/TrendingToday";
@@ -11,7 +12,9 @@ import {
   getListings,
   getSiteStats,
   getTrendingToday,
+  sortBoard,
 } from "@/lib/data";
+import { itemListSchema } from "@/lib/structured-data";
 
 // Bids can change at any moment — never serve a stale cached leaderboard.
 export const dynamic = "force-dynamic";
@@ -26,9 +29,18 @@ export default async function Home() {
     getTrendingToday(5),
   ]);
   const categoryById = (id: string) => categories.find((c) => c.id === id);
+  const nationalBoard = sortBoard(listings, null).slice(0, 20);
 
   return (
-    <PageShell
+    <>
+      <JsonLd
+        data={itemListSchema(
+          nationalBoard,
+          "IndiaBid National Leaderboard",
+          "Businesses ranked by total amount paid on IndiaBid, India's pay-to-rank leaderboard."
+        )}
+      />
+      <PageShell
       listings={listings}
       categories={categories}
       categoryGroups={CATEGORY_GROUPS}
@@ -63,6 +75,7 @@ export default async function Home() {
           listingById={(id) => listings.find((l) => l.id === id)}
         />
       </section>
-    </PageShell>
+      </PageShell>
+    </>
   );
 }

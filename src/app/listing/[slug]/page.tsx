@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import CopyLinkButton from "@/components/CopyLinkButton";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import JsonLd from "@/components/JsonLd";
 import WhatsAppShareButton from "@/components/WhatsAppShareButton";
 import { minimumBidToTakeLead, reclaimAmount } from "@/lib/bidding";
 import { formatRupees, formatCount, timeAgo } from "@/lib/format";
@@ -17,6 +18,7 @@ import {
   getListings,
   sortBoard,
 } from "@/lib/data";
+import { faqPageSchema, organizationSchema } from "@/lib/structured-data";
 import type { ActivityEvent, ActivityEventType, Listing } from "@/lib/types";
 
 // Bid/claim state can change at any moment — never serve a stale cached listing.
@@ -97,8 +99,32 @@ export default async function ListingDetailPage({
 
   const nearby: Listing[] = categoryBoard.filter((l) => l.id !== listing.id).slice(0, 4);
 
+  // Shared by the visible FAQ block and its FAQPage structured-data twin, so
+  // the two can never drift out of sync with each other.
+  const faqItems =
+    overallRank > 0
+      ? [
+          {
+            question: `What rank does ${listing.title} hold on IndiaBid?`,
+            answer: `${listing.title} has spent ${formatRupees(listing.currentBid)} on IndiaBid to rank #${categoryRank} of ${categoryTotal} in ${category?.name ?? "its category"} and #${overallRank} of ${overallTotal} on the ${boardLabel} board.`,
+          },
+          {
+            question: `Has ${listing.title} ranked today?`,
+            answer: todayActivity.hasActivity
+              ? `Yes. ${listing.title} added ${formatRupees(todayActivity.amountToday)} in bids in the last 24 hours.`
+              : `Not yet. ${listing.title} hasn't added any spend in the last 24 hours. Check today's board.`,
+          },
+          {
+            question: `How do I outrank ${listing.title}?`,
+            answer: `Anyone can take this spot for ${formatRupees(outrankAmount)} on the ${boardLabel} board.`,
+          },
+        ]
+      : [];
+
   return (
     <>
+      <JsonLd data={organizationSchema(listing)} />
+      {faqItems.length > 0 && <JsonLd data={faqPageSchema(faqItems)} />}
       <Header />
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-8 pb-16 sm:px-6">
         <Link href={city ? "/local" : "/"} className="text-sm text-muted hover:text-foreground">
@@ -239,22 +265,14 @@ export default async function ListingDetailPage({
           </section>
         )}
 
-        {overallRank > 0 && (
+        {faqItems.length > 0 && (
           <section className="flex flex-col gap-3 rounded-3xl border border-border bg-surface p-5">
             <SectionLabel>About this ranking</SectionLabel>
-            <FaqItem question={`What rank does ${listing.title} hold on IndiaBid?`}>
-              {listing.title} has spent {formatRupees(listing.currentBid)} on IndiaBid to rank #
-              {categoryRank} of {categoryTotal} in {category?.name ?? "its category"} and #{overallRank} of{" "}
-              {overallTotal} on the {boardLabel} board.
-            </FaqItem>
-            <FaqItem question={`Has ${listing.title} ranked today?`}>
-              {todayActivity.hasActivity
-                ? `Yes. ${listing.title} added ${formatRupees(todayActivity.amountToday)} in bids in the last 24 hours.`
-                : `Not yet. ${listing.title} hasn't added any spend in the last 24 hours — check today's board.`}
-            </FaqItem>
-            <FaqItem question={`How do I outrank ${listing.title}?`}>
-              Anyone can take this spot for {formatRupees(outrankAmount)} on the {boardLabel} board.
-            </FaqItem>
+            {faqItems.map((item) => (
+              <FaqItem key={item.question} question={item.question}>
+                {item.answer}
+              </FaqItem>
+            ))}
           </section>
         )}
 
