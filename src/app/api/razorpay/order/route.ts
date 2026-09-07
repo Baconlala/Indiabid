@@ -5,6 +5,13 @@ import { createOrder } from "@/lib/razorpay";
 import { getListingById, getListings, sortBoard } from "@/lib/data";
 
 export async function POST(request: Request) {
+  if (process.env.NEXT_PUBLIC_PAYMENTS_ENABLED !== "true") {
+    return NextResponse.json(
+      { error: "Payments are temporarily disabled — please check back soon." },
+      { status: 503 }
+    );
+  }
+
   const body = await request.json().catch(() => null);
   const listingId = body?.listingId;
   const isLock = body?.isLock === true;

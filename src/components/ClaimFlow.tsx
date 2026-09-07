@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { Listing } from "@/lib/types";
-import { BID_INCREMENT, PREMIUM_LOCK_HOURS, isValidBidStep, premiumLockAmount } from "@/lib/bidding";
+import { BID_INCREMENT, MAX_BID, PREMIUM_LOCK_HOURS, isValidBidStep, premiumLockAmount } from "@/lib/bidding";
 import { formatRupees } from "@/lib/format";
 import { loadRazorpayScript } from "@/lib/load-razorpay-script";
 
@@ -22,9 +22,12 @@ type PaymentResult =
 
 const QUICK_ADDS = [100, 500, 5000];
 
+const PAYMENTS_ENABLED = process.env.NEXT_PUBLIC_PAYMENTS_ENABLED === "true";
+
 function normalizeToStep(value: number, min: number): number {
   if (!Number.isFinite(value) || value < min) return min;
-  return min + Math.round((value - min) / BID_INCREMENT) * BID_INCREMENT;
+  const stepped = min + Math.round((value - min) / BID_INCREMENT) * BID_INCREMENT;
+  return Math.min(stepped, MAX_BID);
 }
 
 export default function ClaimFlow({ listing, mode, minRequired, currentLeaderBid }: Props) {
@@ -35,7 +38,8 @@ export default function ClaimFlow({ listing, mode, minRequired, currentLeaderBid
   const [result, setResult] = useState<PaymentResult | null>(null);
 
   const lockAmount = premiumLockAmount(currentLeaderBid);
-  const canSubmit = consented && isValidBidStep(amount, minRequired);
+  const atMax = amount >= MAX_BID;
+  const canSubmit = consented && isValidBidStep(amount, minRequired) && PAYMENTS_ENABLED;
 
   function setAmountClamped(next: number) {
     const normalized = normalizeToStep(next, minRequired);
@@ -189,12 +193,22 @@ export default function ClaimFlow({ listing, mode, minRequired, currentLeaderBid
               aria-label="Bid amount in rupees"
             />
           </div>
-          <StepButton label="+" onClick={() => setAmountClamped(amount + BID_INCREMENT)} />
+          <StepButton
+            label="+"
+            onClick={() => setAmountClamped(amount + BID_INCREMENT)}
+            disabled={atMax}
+          />
         </div>
-        <span className="text-xs text-muted">
-          Minimum required: {formatRupees(minRequired)} · ₹{BID_INCREMENT} increments · type to enter a
-          custom amount
-        </span>
+        {atMax ? (
+          <span className="text-xs font-semibold text-saffron">
+            Maximum bid reached — {formatRupees(MAX_BID)} is the highest amount you can bid.
+          </span>
+        ) : (
+          <span className="text-xs text-muted">
+            Minimum required: {formatRupees(minRequired)} · ₹{BID_INCREMENT} increments · type to enter a
+            custom amount
+          </span>
+        )}
 
         <div className="flex gap-2">
           {QUICK_ADDS.map((add) => (
@@ -202,13 +216,20 @@ export default function ClaimFlow({ listing, mode, minRequired, currentLeaderBid
               key={add}
               type="button"
               onClick={() => setAmountClamped(amount + add)}
-              className="rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-foreground/80 transition-colors hover:border-saffron hover:text-saffron"
+              disabled={atMax}
+              className="rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-foreground/80 transition-colors hover:border-saffron hover:text-saffron disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-border disabled:hover:text-foreground/80"
             >
               +{formatRupees(add)}
             </button>
           ))}
         </div>
       </div>
+
+      {!PAYMENTS_ENABLED && (
+        <div className="rounded-2xl border border-gold/40 bg-gold/10 p-4 text-center text-sm font-semibold text-gold">
+          ⏸️ Payments are temporarily disabled — please check back soon.
+        </div>
+      )}
 
       <label className="flex items-start gap-3 rounded-2xl border border-border bg-surface p-4 text-sm text-foreground/85">
         <input
@@ -251,7 +272,7 @@ export default function ClaimFlow({ listing, mode, minRequired, currentLeaderBid
         </div>
         <button
           type="button"
-          disabled={!consented || submitting !== null}
+          disabled={!consented || submitting !== null || !PAYMENTS_ENABLED}
           onClick={() => pay(true)}
           className="shrink-0 rounded-full border border-gold px-4 py-2 text-xs font-bold text-gold transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
         >

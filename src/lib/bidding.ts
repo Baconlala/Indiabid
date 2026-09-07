@@ -1,4 +1,5 @@
 export const MIN_BID = 21;
+export const MAX_BID = 99_999_999;
 export const BID_INCREMENT = 10;
 export const PREMIUM_LOCK_MULTIPLIER = 5;
 export const PREMIUM_LOCK_HOURS = 3;
@@ -18,7 +19,12 @@ export function isValidBidAmount(amount: number): boolean {
  * more ₹10 steps, so the resulting total stays on-sequence.
  */
 export function isValidBidStep(amount: number, minRequired: number): boolean {
-  return Number.isInteger(amount) && amount >= minRequired && (amount - minRequired) % BID_INCREMENT === 0;
+  return (
+    Number.isInteger(amount) &&
+    amount >= minRequired &&
+    amount <= MAX_BID &&
+    (amount - minRequired) % BID_INCREMENT === 0
+  );
 }
 
 /** Smallest valid bid (in the ₹21, ₹31, ₹41… sequence) that beats currentTopBid. */
