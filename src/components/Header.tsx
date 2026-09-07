@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import IndiaFlag from "./IndiaFlag";
+import LiveCounter from "./LiveCounter";
 import ThemeToggle from "./ThemeToggle";
 
 export default function Header() {
@@ -11,12 +12,17 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-20 border-b border-border/60 bg-background/80 backdrop-blur">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
-        <Link href="/" className="flex items-center gap-2">
-          <IndiaFlag className="h-5 w-7" />
-          <span className="text-lg font-black tracking-tight">
-            India<span className="text-saffron">Bid</span>
+        <div className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-2">
+            <IndiaFlag className="h-5 w-7" />
+            <span className="text-lg font-black tracking-tight">
+              India<span className="text-saffron">Bid</span>
+            </span>
+          </Link>
+          <span className="hidden sm:block">
+            <LiveCounter />
           </span>
-        </Link>
+        </div>
         <nav className="flex items-center gap-2 text-sm font-medium sm:gap-4">
           <Link
             href="/"

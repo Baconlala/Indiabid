@@ -171,6 +171,20 @@ export function sortBoard(listings: Listing[], cityId: string | null): Listing[]
     });
 }
 
+/** Whether a specific listing has had any bid activity in the last 24h, and how much. */
+export async function getListingTodayActivity(listingId: string): Promise<{ amountToday: number; hasActivity: boolean }> {
+  const supabase = createBrowserSupabaseClient();
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { data, error } = await supabase
+    .from("activity_feed_public")
+    .select("amount")
+    .eq("listing_id", listingId)
+    .gte("timestamp", since);
+  if (error) throw error;
+  const amountToday = (data ?? []).reduce((sum, r) => sum + (r.amount ?? 0), 0);
+  return { amountToday, hasActivity: (data ?? []).length > 0 };
+}
+
 export type TrendingEntry = {
   listing: Listing;
   amountToday: number;
