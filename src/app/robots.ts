@@ -8,7 +8,8 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       // Owner dashboards are reachable only via an unguessable magic-link
       // token — nothing there should ever be crawled or show up in search.
-      disallow: ["/dashboard/", "/api/"],
+      // /admin is the private blog CMS, login-gated but no reason to invite crawlers.
+      disallow: ["/dashboard/", "/api/", "/admin/"],
     },
     sitemap: `${siteUrl}/sitemap.xml`,
   };

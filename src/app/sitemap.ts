@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { getBlogPosts } from "@/lib/blog";
 import { getCategories, getListings } from "@/lib/data";
 
 // Listings and category rankings change constantly — keep the sitemap fresh
@@ -7,12 +8,17 @@ export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://indiabid.lol";
-  const [categories, listings] = await Promise.all([getCategories(), getListings()]);
+  const [categories, listings, blogPosts] = await Promise.all([
+    getCategories(),
+    getListings(),
+    getBlogPosts(),
+  ]);
 
   const staticPages: MetadataRoute.Sitemap = [
     { url: siteUrl, changeFrequency: "hourly", priority: 1 },
     { url: `${siteUrl}/local`, changeFrequency: "hourly", priority: 0.9 },
     { url: `${siteUrl}/daily`, changeFrequency: "hourly", priority: 0.7 },
+    { url: `${siteUrl}/blog`, changeFrequency: "weekly", priority: 0.6 },
     { url: `${siteUrl}/submit`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${siteUrl}/legal/about`, changeFrequency: "yearly", priority: 0.3 },
     { url: `${siteUrl}/legal/rules`, changeFrequency: "yearly", priority: 0.3 },
@@ -37,5 +43,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticPages, ...categoryPages, ...listingPages];
+  const blogPages: MetadataRoute.Sitemap = blogPosts.map((p) => ({
+    url: `${siteUrl}/blog/${p.slug}`,
+    lastModified: p.publishedAt,
+    changeFrequency: "monthly",
+    priority: 0.5,
+  }));
+
+  return [...staticPages, ...categoryPages, ...listingPages, ...blogPages];
 }

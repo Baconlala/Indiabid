@@ -49,6 +49,14 @@ export default function Header() {
           >
             🔥 Daily
           </Link>
+          <Link
+            href="/blog"
+            className={`hidden rounded-full px-3 py-1.5 transition-colors sm:inline ${
+              pathname.startsWith("/blog") ? "text-foreground" : "text-muted hover:text-foreground"
+            }`}
+          >
+            Blog
+          </Link>
           <MobileMenu />
           <ThemeToggle />
           <Link

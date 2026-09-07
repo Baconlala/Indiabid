@@ -10,6 +10,7 @@ const navLinks = [
   { href: "/", label: "National" },
   { href: "/local", label: "Local" },
   { href: "/daily", label: "🔥 Daily" },
+  { href: "/blog", label: "Blog" },
 ];
 
 export default function MobileMenu() {
