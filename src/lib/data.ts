@@ -171,6 +171,45 @@ export function sortBoard(listings: Listing[], cityId: string | null): Listing[]
     });
 }
 
+export type TrendingEntry = {
+  listing: Listing;
+  amountToday: number;
+  eventsToday: number;
+};
+
+/** Listings ranked by rupees bid in the last 24h — a separate "what's hot right now" view, not a second ranking. */
+export async function getTrendingToday(limit = 10): Promise<TrendingEntry[]> {
+  const supabase = createBrowserSupabaseClient();
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { data, error } = await supabase
+    .from("activity_feed_public")
+    .select("listing_id, amount, timestamp")
+    .gte("timestamp", since);
+  if (error) throw error;
+
+  const scores = new Map<string, { amount: number; events: number }>();
+  for (const row of data ?? []) {
+    const cur = scores.get(row.listing_id) ?? { amount: 0, events: 0 };
+    cur.amount += row.amount ?? 0;
+    cur.events += 1;
+    scores.set(row.listing_id, cur);
+  }
+
+  const listings = await getListings();
+  const listingById = new Map(listings.map((l) => [l.id, l]));
+
+  return [...scores.entries()]
+    .map(([listingId, s]) => {
+      const listing = listingById.get(listingId);
+      return listing && listing.isActive
+        ? { listing, amountToday: s.amount, eventsToday: s.events }
+        : null;
+    })
+    .filter((e): e is TrendingEntry => e !== null)
+    .sort((a, b) => b.amountToday - a.amountToday || b.eventsToday - a.eventsToday)
+    .slice(0, limit);
+}
+
 export async function getSiteStats() {
   const listings = await getListings();
   const totalRaised = listings.reduce((sum, l) => sum + l.currentBid, 0);
