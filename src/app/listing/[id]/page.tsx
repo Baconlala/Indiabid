@@ -5,17 +5,18 @@ import CopyLinkButton from "@/components/CopyLinkButton";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import WhatsAppShareButton from "@/components/WhatsAppShareButton";
-import { minimumBidToTakeLead } from "@/lib/bidding";
+import { minimumBidToTakeLead, reclaimAmount } from "@/lib/bidding";
 import { formatRupees, formatCount, timeAgo } from "@/lib/format";
 import {
   getCategories,
   getCities,
+  getListingActivity,
   getListingById,
   getListingTodayActivity,
   getListings,
   sortBoard,
 } from "@/lib/data";
-import type { Listing } from "@/lib/types";
+import type { ActivityEvent, ActivityEventType, Listing } from "@/lib/types";
 
 // Bid/claim state can change at any moment — never serve a stale cached listing.
 export const dynamic = "force-dynamic";
@@ -43,6 +44,13 @@ export async function generateMetadata({
   };
 }
 
+const ACTIVITY_LABEL: Record<ActivityEventType, string> = {
+  listing_created: "Listed",
+  bid_placed: "Bid placed",
+  rank_reclaimed: "Rank reclaimed",
+  top_locked: "Locked at #1",
+};
+
 export default async function ListingDetailPage({
   params,
 }: {
@@ -52,11 +60,12 @@ export default async function ListingDetailPage({
   const listing = await getListingById(id);
   if (!listing) notFound();
 
-  const [categories, cities, listings, todayActivity] = await Promise.all([
+  const [categories, cities, listings, todayActivity, activity] = await Promise.all([
     getCategories(),
     getCities(),
     getListings(),
     getListingTodayActivity(id),
+    getListingActivity(id),
   ]);
   const category = categories.find((c) => c.id === listing.categoryId);
   const city = listing.cityId ? cities.find((c) => c.id === listing.cityId) : null;
@@ -65,12 +74,15 @@ export default async function ListingDetailPage({
   const board = sortBoard(listings, listing.cityId);
   const overallRank = board.findIndex((l) => l.id === listing.id) + 1;
   const overallTotal = board.length;
+  const leader = board[0];
 
   const categoryBoard = board.filter((l) => l.categoryId === listing.categoryId);
   const categoryRank = categoryBoard.findIndex((l) => l.id === listing.id) + 1;
   const categoryTotal = categoryBoard.length;
 
   const outrankAmount = minimumBidToTakeLead(listing.currentBid);
+  const gapToLead =
+    overallRank > 1 && leader ? reclaimAmount(listing.currentBid, leader.currentBid) : 0;
   const boardLabel = city ? city.name : "national";
 
   const nearby: Listing[] = categoryBoard.filter((l) => l.id !== listing.id).slice(0, 4);
@@ -78,16 +90,19 @@ export default async function ListingDetailPage({
   return (
     <>
       <Header />
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 py-8 pb-16 sm:px-6">
+      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-8 pb-16 sm:px-6">
         <Link href={city ? "/local" : "/"} className="text-sm text-muted hover:text-foreground">
           ← Back to leaderboard
         </Link>
 
         <div className="flex flex-col gap-4 rounded-3xl border border-border bg-surface p-6 sm:p-8">
-          <div className="flex h-40 items-center justify-center rounded-2xl bg-surface-raised">
-            {listing.faviconUrl ? (
+          <div className="flex h-48 items-center justify-center overflow-hidden rounded-2xl bg-surface-raised sm:h-56">
+            {listing.imageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={listing.faviconUrl} alt="" className="h-12 w-12 opacity-90" />
+              <img src={listing.imageUrl} alt="" className="h-full w-full object-cover" />
+            ) : listing.faviconUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={listing.faviconUrl} alt="" className="h-14 w-14 opacity-90" />
             ) : (
               <span className="text-4xl font-black text-muted">{listing.title.charAt(0)}</span>
             )}
@@ -157,27 +172,66 @@ export default async function ListingDetailPage({
         </div>
 
         {overallRank > 0 && (
-          <div className="grid grid-cols-2 gap-3">
-            <RankCard
-              label="Category rank"
-              rank={categoryRank}
-              total={categoryTotal}
-              of={category?.name ?? "this category"}
-              href={category ? `/category/${category.slug}` : undefined}
-            />
-            <RankCard
-              label="Overall"
-              rank={overallRank}
-              total={overallTotal}
-              of={`the ${boardLabel} board`}
-              href={city ? "/local" : "/"}
-            />
-          </div>
+          <section className="flex flex-col gap-3">
+            <SectionLabel>Ranking</SectionLabel>
+            <div className="grid grid-cols-2 gap-3">
+              <RankCard
+                label="Category rank"
+                rank={categoryRank}
+                total={categoryTotal}
+                of={category?.name ?? "this category"}
+                href={category ? `/category/${category.slug}` : undefined}
+              />
+              <RankCard
+                label="Overall"
+                rank={overallRank}
+                total={overallTotal}
+                of={`the ${boardLabel} board`}
+                href={city ? "/local" : "/"}
+              />
+            </div>
+            {gapToLead > 0 && leader && (
+              <div className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-4 text-sm">
+                <span className="text-foreground/80">
+                  {formatRupees(gapToLead)} behind{" "}
+                  <Link href={`/listing/${leader.id}`} className="font-semibold text-foreground hover:text-saffron">
+                    {leader.title}
+                  </Link>{" "}
+                  for #1
+                </span>
+                <Link href={`/claim/${listing.id}`} className="shrink-0 text-xs font-semibold text-saffron hover:underline">
+                  Reclaim →
+                </Link>
+              </div>
+            )}
+          </section>
+        )}
+
+        {activity.length > 0 && (
+          <section className="flex flex-col gap-3">
+            <SectionLabel>Recent activity</SectionLabel>
+            <ul className="flex flex-col gap-1 rounded-2xl border border-border bg-surface p-2">
+              {activity.map((event: ActivityEvent) => (
+                <li
+                  key={event.id}
+                  className="flex items-center justify-between gap-3 rounded-xl px-3 py-2 text-sm"
+                >
+                  <span className="text-foreground/80">{ACTIVITY_LABEL[event.eventType]}</span>
+                  <span className="flex shrink-0 items-center gap-2 text-xs text-muted">
+                    {event.amount ? (
+                      <span className="font-semibold text-foreground/70">{formatRupees(event.amount)}</span>
+                    ) : null}
+                    {timeAgo(event.timestamp)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
         )}
 
         {overallRank > 0 && (
-          <div className="flex flex-col gap-4 rounded-3xl border border-border bg-surface p-5">
-            <h2 className="text-sm font-bold text-foreground">About this ranking</h2>
+          <section className="flex flex-col gap-3 rounded-3xl border border-border bg-surface p-5">
+            <SectionLabel>About this ranking</SectionLabel>
             <FaqItem question={`What rank does ${listing.title} hold on IndiaBid?`}>
               {listing.title} has spent {formatRupees(listing.currentBid)} on IndiaBid to rank #
               {categoryRank} of {categoryTotal} in {category?.name ?? "its category"} and #{overallRank} of{" "}
@@ -191,13 +245,13 @@ export default async function ListingDetailPage({
             <FaqItem question={`How do I outrank ${listing.title}?`}>
               Anyone can take this spot for {formatRupees(outrankAmount)} on the {boardLabel} board.
             </FaqItem>
-          </div>
+          </section>
         )}
 
         {nearby.length > 0 && category && (
-          <div className="flex flex-col gap-3">
+          <section className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-bold text-foreground">Also in {category.name}</h2>
+              <SectionLabel>Also in {category.name}</SectionLabel>
               <Link href={`/category/${category.slug}`} className="text-xs text-muted hover:text-foreground">
                 See all →
               </Link>
@@ -216,12 +270,16 @@ export default async function ListingDetailPage({
                 </Link>
               ))}
             </div>
-          </div>
+          </section>
         )}
       </main>
       <Footer />
     </>
   );
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">{children}</h2>;
 }
 
 function Stat({ label, value }: { label: string; value: string }) {
@@ -247,7 +305,7 @@ function RankCard({
   href?: string;
 }) {
   const content = (
-    <div className="flex flex-col gap-1 rounded-2xl border border-border bg-surface p-4">
+    <div className="flex h-full flex-col gap-1 rounded-2xl border border-border bg-surface p-4">
       <span className="text-[11px] font-semibold tracking-wide text-muted uppercase">{label}</span>
       <span className="text-2xl font-black text-foreground">#{rank}</span>
       <span className="text-xs text-muted">
@@ -256,7 +314,13 @@ function RankCard({
       {href && <span className="mt-1 text-xs font-semibold text-saffron">See ranking →</span>}
     </div>
   );
-  return href ? <Link href={href}>{content}</Link> : content;
+  return href ? (
+    <Link href={href} className="block h-full">
+      {content}
+    </Link>
+  ) : (
+    content
+  );
 }
 
 function FaqItem({ question, children }: { question: string; children: React.ReactNode }) {

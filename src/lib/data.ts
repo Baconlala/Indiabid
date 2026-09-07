@@ -171,6 +171,25 @@ export function sortBoard(listings: Listing[], cityId: string | null): Listing[]
     });
 }
 
+/** Recent bid/lock history for one listing, newest first. */
+export async function getListingActivity(listingId: string, limit = 6): Promise<ActivityEvent[]> {
+  const supabase = createBrowserSupabaseClient();
+  const { data, error } = await supabase
+    .from("activity_feed_public")
+    .select("*")
+    .eq("listing_id", listingId)
+    .order("timestamp", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    listingId: r.listing_id,
+    eventType: r.event_type,
+    amount: r.amount,
+    timestamp: r.timestamp,
+  }));
+}
+
 /** Whether a specific listing has had any bid activity in the last 24h, and how much. */
 export async function getListingTodayActivity(listingId: string): Promise<{ amountToday: number; hasActivity: boolean }> {
   const supabase = createBrowserSupabaseClient();

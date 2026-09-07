@@ -8,32 +8,18 @@ type Props = {
   category: Category | undefined;
 };
 
-// Top-3 get a medal + a tinted card, not just a different number color — color
-// alone (what outbid.lol does) doesn't read for colorblind users and is easy
-// to miss at a glance; a medal glyph and a whole-row tint don't have that problem.
-const PODIUM: Record<number, { medal: string; border: string; wash: string; badge: string }> = {
-  1: {
-    medal: "🥇",
-    border: "border-gold/60",
-    wash: "bg-gradient-to-r from-gold/10 via-transparent to-transparent",
-    badge: "bg-gold/20 text-gold",
-  },
-  2: {
-    medal: "🥈",
-    border: "border-slate-400/50",
-    wash: "bg-gradient-to-r from-slate-400/10 via-transparent to-transparent",
-    badge: "bg-slate-400/20 text-slate-300",
-  },
-  3: {
-    medal: "🥉",
-    border: "border-amber-700/50",
-    wash: "bg-gradient-to-r from-amber-700/10 via-transparent to-transparent",
-    badge: "bg-amber-700/20 text-amber-600",
-  },
+// Top-3 get a colored numeral and a thin left accent border — nothing more.
+// No medals, no gradient fills; the number stays the focus and the accent is
+// a single flat line, the same language dashboards use for status, not a
+// decoration bolted onto a leaderboard row.
+const PODIUM: Record<number, { text: string; accent: string }> = {
+  1: { text: "text-gold", accent: "border-l-gold" },
+  2: { text: "text-zinc-400", accent: "border-l-zinc-400" },
+  3: { text: "text-amber-700", accent: "border-l-amber-700" },
 };
 
 function rankColor(rank: number): string {
-  return rank <= 3 ? "text-foreground" : "text-muted";
+  return PODIUM[rank]?.text ?? "text-muted";
 }
 
 export default function RankRow({ rank, listing, category }: Props) {
@@ -43,29 +29,16 @@ export default function RankRow({ rank, listing, category }: Props) {
   return (
     <div
       className={`group flex items-center gap-4 rounded-2xl border p-3 transition-colors sm:gap-5 sm:p-4 ${
-        podium
-          ? `${podium.border} ${podium.wash}`
-          : listing.isClaimed
-            ? "border-border bg-surface hover:border-saffron/40"
-            : "border-dashed border-border/70 bg-transparent"
-      }`}
+        listing.isClaimed
+          ? "border-border bg-surface hover:border-saffron/40"
+          : "border-dashed border-border/70 bg-transparent"
+      } ${podium ? `border-l-[3px] ${podium.accent}` : ""}`}
     >
-      {podium ? (
-        <div className="flex w-10 shrink-0 flex-col items-center gap-1 sm:w-14">
-          <span className="text-3xl leading-none sm:text-4xl" aria-hidden="true">
-            {podium.medal}
-          </span>
-          <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold tabular-nums ${podium.badge}`}>
-            #{rank}
-          </span>
-        </div>
-      ) : (
-        <div
-          className={`w-10 shrink-0 text-center text-3xl font-black tabular-nums sm:w-14 sm:text-4xl ${rankColor(rank)}`}
-        >
-          {rank}
-        </div>
-      )}
+      <div
+        className={`w-10 shrink-0 text-center text-3xl font-black tabular-nums sm:w-14 sm:text-4xl ${rankColor(rank)}`}
+      >
+        {rank}
+      </div>
 
       <div className="relative hidden h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-surface-raised sm:flex sm:h-20 sm:w-28 sm:items-center sm:justify-center">
         {listing.imageUrl ? (
